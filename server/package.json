@@ -9,6 +9,10 @@
     "dev": "node --watch index.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "better-auth": "^1.6.20",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "mongodb": "^7.3.0"
   }
 }

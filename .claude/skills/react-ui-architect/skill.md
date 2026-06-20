@@ -1,43 +1,293 @@
 ---
 name: react-ui-architect
-description: Enforces TypeScript type safety, React best practices, and unified App.css theme variables for Dark Mode compatibility.
+description: Enforces TypeScript type safety, React best practices, project folder architecture, routing conventions, and unified App.css theme variables for Dark Mode compatibility.
 ---
 
 # Role & Objective
 
-You are an expert React, TypeScript, and UI/UX engineering agent. Your objective is to ensure that all new code, refactors, and components strictly respect project-level styling schemas and typing systems.
+You are an expert React, TypeScript, and UI/UX engineering agent. Your objective is to ensure that all new code, refactors, pages, and components strictly follow the project's architecture, routing conventions, styling schema, and typing systems.
 
-# Core Guidelines
+# Project Architecture
 
-## 1. UI Styling & Dark Mode Harmony
+## Directory Structure
 
-- **App.css Extraction**: Before generating or editing UI components, read the `.css` variables inside `App.css` (or your main theme file).
-- **No Hardcoded Colors**: Do not inject arbitrary hex codes, RGB values, or inline color strings (e.g., `#fff`, `color: "black"`).
-- **CSS Variables**: Exclusively use the defined CSS custom properties from the project theme (e.g., `var(--bg-primary)`, `var(--text-main)`).
-- **Dark Mode Adaptability**: Ensure background and font pairings automatically shift with system or theme classes specified in `App.css`.
-- **Sizing Scales**: Respect local spacing scales (`--space-sm`, `--space-md`) and semantic font sizes (`--font-lg`, `--font-base`).
+The application follows a feature-driven architecture with clear separation between routing, feature implementation, and reusable UI components.
 
-## 2. Strict TypeScript & Typing Requirements
+```text
+client/src/
+├── pages/                      # Route entry points (one folder per screen)
+│   ├── Dashboard/
+│   │   └── DashboardPage.tsx
+│   ├── SignIn/
+│   │   └── SignInPage.tsx
+│   └── SignUp/
+│       └── SignUpPage.tsx
+│
+├── features/                   # Self-contained domain modules
+│   └── Auth/
+│       ├── components/         # Feature-specific UI (GoogleAuthButton, AuthShell, ProtectedLayout, ...)
+│       ├── lib/                # Clients & integrations (auth-client.ts)
+│       ├── hooks/              # Feature hooks
+│       ├── services/          # API calls
+│       ├── types/             # Feature types
+│       ├── utils/             # Feature helpers
+│       └── index.ts           # Public barrel — import features through this
+│
+├── components/                 # Shared, presentation-only components
+│   ├── ui/                     # shadcn primitives (button, input, sidebar, ...)
+│   ├── app-layout.tsx          # Authenticated shell (sidebar + <Outlet/>), props-driven
+│   ├── app-sidebar.tsx         # Presentational sidebar (receives user + onSignOut)
+│   └── theme-provider.tsx
+│
+├── routes/
+│   └── AppRoutes.tsx           # The <Routes> tree
+├── hooks/                      # Shared hooks (use-theme, use-mobile)
+├── lib/                        # Shared utils (cn)
+├── App.tsx                     # Providers + <BrowserRouter>
+└── App.css                     # Theme tokens (light/dark)
+```
 
-- **No Implicit 'any'**: Explicitly type every function parameter, component prop, and state payload.
-- **Component Typing**: Define React components using standard TypeScript signatures:
-  ```tsx
-  interface MyComponentProps {
-    title: string;
-    isOpen: boolean;
-  }
-  export const MyComponent = ({ title, isOpen }: MyComponentProps) => { ... }
-  ```
-- **Hook Typing**: Provide generic types for hooks when inference falls short (e.g., `useState<User | null>(null)`).
+> Page and feature folders are PascalCase (`SignIn/`, `Auth/`). Shared component
+> files follow the existing kebab-case convention (`app-layout.tsx`). Resolve all
+> intra-`src` imports through the `@/` alias.
 
-## 3. React Best Practices
+## Routing Rules
 
-- **Hooks Ordering**: Adhere strictly to top-level hooks execution orders.
-- **Key Props**: Array mapping must utilize stable, unique IDs as keys—never index integers unless static and un-shiftable.
-- **Performance Elements**: Wrap heavy computations in `useMemo` and callbacks passed to children in `useCallback` when referencing dependencies.
+### Pages Directory
 
-# Workflow Execution Execution Loop
+- The `pages/` directory contains route entry points only.
+- Every routable screen must have a corresponding page component inside `pages/`.
+- Page components should remain lightweight and primarily:
+  - Read route parameters.
+  - Compose feature components.
+  - Handle page-level layout concerns.
+  - Delegate business logic to feature modules.
 
-1. **Locate Context**: Read `App.css` to grasp active style tokens.
-2. **Analyze State**: Verify local TypeScript interfaces match API boundaries.
-3. **Execute Draft**: Produce production-ready code with complete type coverage and proper semantic HTML elements.
+Example:
+
+```tsx
+export const UsersPage = () => {
+  return <UsersFeature />;
+};
+```
+
+### Features Directory
+
+- The `features/` directory contains all business logic and implementation details of a page.
+- A feature may contain:
+  - Feature-specific components
+  - Hooks
+  - Services/API calls
+  - Types
+  - Utilities
+  - State management
+
+Feature modules should be self-contained and own their domain logic.
+
+### Components Directory
+
+- The `components/` directory contains reusable, shared UI components used across multiple features and pages.
+- Shared components must:
+  - Be presentation-focused.
+  - Remain domain-agnostic.
+  - Receive all required data through typed props.
+  - Avoid feature-specific business logic.
+
+Examples:
+
+- Button
+- Input
+- Modal
+- Table
+- Loader
+- Card
+- EmptyState
+
+### Router Wiring
+
+Routing uses `react-router-dom`. The provider tree lives in `App.tsx`, the route
+table lives in `routes/AppRoutes.tsx`, and authentication is enforced by a
+feature component — never by a shared component.
+
+```tsx
+// App.tsx — providers only
+<ThemeProvider defaultTheme="light">
+  <BrowserRouter>
+    <AppRoutes />
+  </BrowserRouter>
+</ThemeProvider>
+```
+
+```tsx
+// routes/AppRoutes.tsx — declarative route table
+<Routes>
+  <Route path="/signin" element={<SignInPage />} />
+  <Route path="/signup" element={<SignUpPage />} />
+
+  {/* Protected branch: ProtectedLayout guards the session AND renders the shell */}
+  <Route element={<ProtectedLayout />}>
+    <Route path="/" element={<DashboardPage />} />
+  </Route>
+
+  <Route path="*" element={<Navigate to="/" replace />} />
+</Routes>
+```
+
+Routing conventions:
+
+- **Public vs. protected.** Auth screens (`/signin`, `/signup`) are top-level
+  public routes. Everything else nests under a layout route whose `element` is a
+  guard from the relevant feature (e.g. `features/Auth/ProtectedLayout`).
+- **Guards belong to features.** A guard reads the session and either redirects
+  (`<Navigate to="/signin" replace />`), shows a loading state while the session
+  resolves, or renders the protected `<Outlet />`. It must not live in
+  `components/` (that would make a shared component depend on a feature).
+- **Layouts stay presentational.** The authenticated shell (`AppLayout`,
+  `AppSidebar`) receives `user` and `onSignOut` as props and renders nested
+  routes through `<Outlet />`. The feature guard supplies those props.
+- **Pages redirect when already authenticated.** Auth pages send signed-in users
+  to `/` so the back button can't strand them on a sign-in screen.
+- **Unknown paths** fall back via a `*` route.
+
+## Import Direction Rules
+
+Allowed:
+
+```text
+pages      → features
+pages      → components
+features   → components
+features   → shared hooks/utils/types
+components → shared hooks/utils/types
+```
+
+Avoid:
+
+```text
+components → features
+components → pages
+features   → pages
+```
+
+Dependencies should always flow downward toward shared modules and never upward toward pages or feature implementations.
+
+# UI Styling & Dark Mode Harmony
+
+## App.css Extraction
+
+Before generating or editing UI components, read the CSS variables defined in `App.css` (or the application's primary theme file).
+
+## No Hardcoded Colors
+
+Do not inject arbitrary:
+
+- Hex colors
+- RGB values
+- Inline color strings
+
+Examples to avoid:
+
+```tsx
+color: "#fff";
+background: "#000";
+```
+
+## CSS Variables
+
+Exclusively use project-defined CSS custom properties.
+
+Examples:
+
+```css
+var(--bg-primary)
+var(--bg-secondary)
+var(--text-primary)
+var(--text-secondary)
+var(--border-primary)
+```
+
+## Dark Mode Adaptability
+
+Ensure backgrounds, text, borders, and surfaces automatically adapt to the application's active theme configuration.
+
+## Sizing Scales
+
+Respect existing design tokens:
+
+```css
+--space-xs
+--space-sm
+--space-md
+--space-lg
+--font-sm
+--font-base
+--font-lg
+```
+
+# Strict TypeScript Requirements
+
+## No Implicit `any`
+
+Explicitly type:
+
+- Function parameters
+- Component props
+- State payloads
+- API responses
+- Hook return values
+
+## Component Typing
+
+```tsx
+interface MyComponentProps {
+  title: string;
+  isOpen: boolean;
+}
+
+export const MyComponent = ({ title, isOpen }: MyComponentProps) => {
+  // implementation
+};
+```
+
+## Hook Typing
+
+```tsx
+const [user, setUser] = useState<User | null>(null);
+```
+
+# React Best Practices
+
+## Hooks
+
+- Call hooks only at the top level.
+- Never conditionally invoke hooks.
+
+## Lists
+
+Use stable identifiers as keys.
+
+```tsx
+items.map((item) => <Row key={item.id} />);
+```
+
+Avoid:
+
+```tsx
+items.map((item, index) => <Row key={index} />);
+```
+
+unless the list is static and guaranteed not to reorder.
+
+## Performance
+
+- Use `useMemo` for expensive computations.
+- Use `useCallback` when passing callbacks to child components that rely on referential equality.
+
+# Workflow Execution Loop
+
+1. Read `App.css` and identify available theme variables.
+2. Determine whether the change belongs in `pages`, `features`, or `components`.
+3. Keep page files thin and move business logic into feature modules.
+4. Reuse shared components whenever possible instead of creating duplicates.
+5. Verify TypeScript interfaces and API boundaries.
+6. Generate production-ready, accessible, and fully typed React code that respects the established architecture and theme system.

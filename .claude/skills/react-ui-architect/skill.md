@@ -283,6 +283,65 @@ unless the list is static and guaranteed not to reorder.
 - Use `useMemo` for expensive computations.
 - Use `useCallback` when passing callbacks to child components that rely on referential equality.
 
+# shadcn/ui Installation Rules
+
+## Never Manually Create shadcn Files
+
+When a shadcn component is required, do **not** generate or edit the primitive component files yourself (for example `components/ui/button.tsx`, `input.tsx`, `dialog.tsx`, etc.).
+
+Never output the contents of shadcn registry components unless the user explicitly pastes those files and asks for modifications.
+
+## Required Installation Method
+
+Always install shadcn components through the shadcn CLI.
+
+Examples:
+
+```bash
+npx shadcn@latest add button
+npx shadcn@latest add input
+npx shadcn@latest add dialog
+npx shadcn@latest add form
+npx shadcn@latest add table
+```
+
+If multiple components are required:
+
+```bash
+npx shadcn@latest add button input dialog form
+```
+
+## Workflow
+
+1. Determine which shadcn components are needed.
+2. Output the exact `npx shadcn@latest add ...` command(s).
+3. Assume the generated files already exist after installation.
+4. Build feature code by importing from `@/components/ui/...`.
+5. Do not recreate or duplicate shadcn primitives.
+
+Example:
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+```
+
+Generate only:
+
+- Installation commands
+- Imports
+- Feature/page implementation code
+
+Never generate:
+
+- `components/ui/button.tsx`
+- `components/ui/input.tsx`
+- `components/ui/dialog.tsx`
+- Any other shadcn registry file contents
+
+Exception:
+Only edit an existing shadcn primitive if the user explicitly asks to customize that specific file and has provided its current contents.
+
 # Workflow Execution Loop
 
 1. Read `App.css` and identify available theme variables.

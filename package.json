@@ -1,0 +1,22 @@
+{
+  "name": "info-hub",
+  "version": "1.0.0",
+  "description": "info_hub monorepo (client + server)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "husky",
+    "format": "prettier --write \"client/**/*.{ts,tsx,js,jsx,css,html,json,md}\" \"server/**/*.{js,json,md}\"",
+    "format:check": "prettier --check \"client/**/*.{ts,tsx,js,jsx,css,html,json,md}\" \"server/**/*.{js,json,md}\""
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.0",
+    "prettier-plugin-tailwindcss": "^0.8.0"
+  },
+  "lint-staged": {
+    "client/**/*.{ts,tsx,js,jsx,css,html,json,md}": "prettier --write",
+    "server/**/*.{js,json,md}": "prettier --write"
+  }
+}

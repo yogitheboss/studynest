@@ -6,13 +6,19 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "better-auth": "^1.6.20",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
-    "mongodb": "^7.3.0"
+    "mongodb": "^7.3.0",
+    "morgan": "^1.11.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.4"
   }
 }

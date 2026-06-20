@@ -17,28 +17,28 @@ export const AuthShell = ({
   footer,
 }: AuthShellProps) => {
   return (
-    <main className="flex min-h-svh items-center justify-center bg-background p-6">
+    <main className="bg-background flex min-h-svh items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="bg-primary text-primary-foreground flex aspect-square size-10 items-center justify-center rounded-lg">
             <Library className="size-5" />
           </div>
           <span className="text-lg font-semibold">info_hub</span>
         </div>
 
-        <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <section className="border-border bg-card rounded-xl border p-6 shadow-sm">
           <header className="mb-6 space-y-1.5 text-center">
-            <h1 className="text-xl font-semibold text-card-foreground">
+            <h1 className="text-card-foreground text-xl font-semibold">
               {title}
             </h1>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-muted-foreground text-sm">{description}</p>
           </header>
 
           {children}
         </section>
 
         {footer ? (
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-6 text-center text-sm">
             {footer}
           </p>
         ) : null}

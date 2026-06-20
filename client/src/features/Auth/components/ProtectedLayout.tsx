@@ -21,8 +21,8 @@ export const ProtectedLayout = () => {
 
   if (isPending) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-background">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      <div className="bg-background flex min-h-svh items-center justify-center">
+        <Loader2 className="text-muted-foreground size-6 animate-spin" />
       </div>
     );
   }

@@ -2,6 +2,7 @@ import "dotenv/config";
 
 import express from "express";
 import cors from "cors";
+import morgan from "morgan";
 import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
 
 import { auth } from "./auth.js";
@@ -9,6 +10,10 @@ import { auth } from "./auth.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
+// HTTP request logging. Use concise "dev" output locally and "combined"
+// (Apache-style) logs in production.
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // Allow the frontend to call the API with credentials (cookies).
 app.use(

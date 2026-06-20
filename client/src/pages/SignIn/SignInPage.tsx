@@ -19,7 +19,7 @@ export const SignInPage = () => {
           Don&apos;t have an account?{" "}
           <Link
             to="/signup"
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="text-primary font-medium underline-offset-4 hover:underline"
           >
             Sign up
           </Link>

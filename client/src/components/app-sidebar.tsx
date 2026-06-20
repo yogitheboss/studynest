@@ -69,7 +69,7 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 py-1.5">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="bg-primary text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
             <Library className="size-4" />
           </div>
           <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
@@ -135,13 +135,15 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
                   className="size-8 shrink-0 rounded-lg object-cover"
                 />
               ) : (
-                <span className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-xs font-medium text-sidebar-primary-foreground">
+                <span className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg text-xs font-medium">
                   {initials}
                 </span>
               )}
               <div className="grid flex-1 text-left leading-tight">
-                <span className="truncate text-sm font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-sm font-medium">
+                  {user.name}
+                </span>
+                <span className="text-muted-foreground truncate text-xs">
                   {user.email}
                 </span>
               </div>

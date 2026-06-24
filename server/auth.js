@@ -15,20 +15,24 @@ client
   .catch((err) => console.error("MongoDB connection error:", err.message));
 const db = client.db();
 
+const trustedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:5173",
+  process.env.BETTER_AUTH_URL || "http://localhost:3000",
+].filter(Boolean);
+
 export const auth = betterAuth({
-  // Origin Better Auth runs on. Used to build the Google callback URL.
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
 
   database: mongodbAdapter(db),
 
-  // Frontend origins allowed to start auth flows / receive redirects.
-  trustedOrigins: [process.env.CLIENT_URL || "http://localhost:5173"],
+  trustedOrigins,
 
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      redirectURI: `${process.env.BETTER_AUTH_URL || "http://localhost:3000"}/api/auth/callback/google`,
     },
   },
 });

@@ -13,7 +13,7 @@ export const SignInPage = () => {
   return (
     <AuthShell
       title="Welcome back"
-      description="Sign in to your info_hub account to continue."
+      description="Sign in to your StudyNest account to continue."
       footer={
         <>
           Don&apos;t have an account?{" "}

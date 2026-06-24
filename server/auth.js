@@ -6,7 +6,7 @@ import { MongoClient } from "mongodb";
 
 const mongoUri =
   process.env.MONGODB_URI ||
-  "mongodb://localhost:27017/info_hub?retryWrites=false";
+  "mongodb://localhost:27017/studyNest?retryWrites=false";
 
 const client = new MongoClient(mongoUri);
 client

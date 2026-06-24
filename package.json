@@ -1,7 +1,7 @@
 {
-  "name": "info-hub",
+  "name": "studynest",
   "version": "1.0.0",
-  "description": "info_hub monorepo (client + server)",
+  "description": "studynest monorepo (client + server)",
   "private": true,
   "type": "module",
   "scripts": {

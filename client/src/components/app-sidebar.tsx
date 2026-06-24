@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   GraduationCap,
   Upload,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useTheme } from "@/hooks/use-theme";
+import { useUIStore, type AppTab } from "@/stores/ui-store";
 import {
   Sidebar,
   SidebarContent,
@@ -38,17 +39,27 @@ interface AppSidebarProps {
   onSignOut: () => void;
 }
 
-type TabId = "courses" | "uploads";
-
-interface NavItem {
-  id: TabId;
+export interface NavItem {
+  id: AppTab;
   label: string;
   icon: LucideIcon;
+  /** Shorter label for the cramped mobile bottom bar. */
+  shortLabel: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "courses", label: "Courses", icon: GraduationCap },
-  { id: "uploads", label: "Your Uploaded Content", icon: Upload },
+export const NAV_ITEMS: NavItem[] = [
+  {
+    id: "courses",
+    label: "Courses",
+    shortLabel: "Courses",
+    icon: GraduationCap,
+  },
+  {
+    id: "uploads",
+    label: "Your Uploaded Content",
+    shortLabel: "Uploads",
+    icon: Upload,
+  },
 ];
 
 const getInitials = (name: string): string =>
@@ -60,7 +71,8 @@ const getInitials = (name: string): string =>
     .join("") || "?";
 
 export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("courses");
+  const activeTab = useUIStore((state) => state.activeTab);
+  const setActiveTab = useUIStore((state) => state.setActiveTab);
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const initials = useMemo(() => getInitials(user.name), [user.name]);
@@ -73,7 +85,7 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
             <Library className="size-4" />
           </div>
           <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
-            info_hub
+            StudyNest
           </span>
         </div>
       </SidebarHeader>

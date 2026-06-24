@@ -28,7 +28,7 @@ function getInitialTheme(storageKey: string, defaultTheme: Theme): Theme {
 export function ThemeProvider({
   children,
   defaultTheme = "light",
-  storageKey = "info-hub-theme",
+  storageKey = "study-nest-theme",
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() =>
     getInitialTheme(storageKey, defaultTheme)

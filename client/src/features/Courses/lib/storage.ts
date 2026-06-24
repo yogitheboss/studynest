@@ -1,6 +1,6 @@
 import type { Course } from "../types";
 
-const STORAGE_KEY = "info_hub.courses.v1";
+const STORAGE_KEY = "studynest.courses.v1";
 
 /** Read all persisted courses. Returns [] on any read/parse failure. */
 export const loadCourses = (): Course[] => {

@@ -27,24 +27,24 @@ export interface GraphLayout {
 export const NODE_WIDTH = 220;
 export const NODE_HEIGHT = 64;
 
-/** Horizontal gap between depth columns and vertical gap between siblings. */
-const COLUMN_GAP = 120;
-const ROW_GAP = 28;
-const PADDING = 40;
+/** Vertical gap between depth levels and horizontal gap between siblings. */
+const LEVEL_GAP = 32;
+const SIBLING_GAP = 12;
+const PADDING = 24;
 
-const COLUMN_STRIDE = NODE_WIDTH + COLUMN_GAP;
-const ROW_STRIDE = NODE_HEIGHT + ROW_GAP;
+const ROW_STRIDE = NODE_HEIGHT + LEVEL_GAP;
+const COLUMN_STRIDE = NODE_WIDTH + SIBLING_GAP;
 
 /**
- * Compute a left-to-right "tidy tree" layout: leaves occupy successive rows,
- * each parent is vertically centered on the span of its children. Single pass,
- * O(n).
+ * Compute a top-down "tidy tree" layout: depth flows down the Y axis, leaves
+ * occupy successive columns across the X axis, and each parent is horizontally
+ * centered on the span of its children. Single pass, O(n).
  */
 export const computeLayout = (root: CourseNode): GraphLayout => {
   const nodes: LayoutNode[] = [];
   const edges: LayoutEdge[] = [];
 
-  let nextLeafRow = 0;
+  let nextLeafColumn = 0;
 
   const centerOf = (placed: LayoutNode) => ({
     cx: placed.x + NODE_WIDTH / 2,
@@ -53,17 +53,17 @@ export const computeLayout = (root: CourseNode): GraphLayout => {
 
   /** Returns the placed node so the parent can read its center for the edge. */
   const place = (node: CourseNode): LayoutNode => {
-    const x = PADDING + node.depth * COLUMN_STRIDE;
+    const y = PADDING + node.depth * ROW_STRIDE;
 
-    let y: number;
+    let x: number;
     if (node.children.length === 0) {
-      y = PADDING + nextLeafRow * ROW_STRIDE;
-      nextLeafRow += 1;
+      x = PADDING + nextLeafColumn * COLUMN_STRIDE;
+      nextLeafColumn += 1;
     } else {
       const placedChildren = node.children.map(place);
-      const first = placedChildren[0].y;
-      const last = placedChildren[placedChildren.length - 1].y;
-      y = (first + last) / 2;
+      const first = placedChildren[0].x;
+      const last = placedChildren[placedChildren.length - 1].x;
+      x = (first + last) / 2;
     }
 
     const placed: LayoutNode = { node, x, y };
@@ -107,10 +107,10 @@ export const computeLayout = (root: CourseNode): GraphLayout => {
 };
 
 /**
- * Build an SVG cubic-bezier path between two points, curving horizontally —
- * matches the left-to-right column flow.
+ * Build an SVG cubic-bezier path between two points, curving vertically —
+ * matches the top-down level flow.
  */
 export const edgePath = (edge: LayoutEdge): string => {
-  const midX = (edge.fromX + edge.toX) / 2;
-  return `M ${edge.fromX} ${edge.fromY} C ${midX} ${edge.fromY}, ${midX} ${edge.toY}, ${edge.toX} ${edge.toY}`;
+  const midY = (edge.fromY + edge.toY) / 2;
+  return `M ${edge.fromX} ${edge.fromY} C ${edge.fromX} ${midY}, ${edge.toX} ${midY}, ${edge.toX} ${edge.toY}`;
 };

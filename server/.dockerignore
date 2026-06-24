@@ -1,7 +1,4 @@
 node_modules
-.DS_Store
-*.local
 .env
-
 gcs-key.json
-*-key.json
+*.log

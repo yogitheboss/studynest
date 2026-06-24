@@ -78,7 +78,7 @@ export const CourseGraph = ({
   return (
     <div className="bg-muted/30 relative h-full w-full overflow-hidden rounded-xl border">
       {/* Controls */}
-      <div className="bg-background/90 absolute top-3 right-3 z-10 flex items-center gap-1 rounded-lg border p-1 shadow-sm backdrop-blur">
+      <div className="bg-background/90 absolute right-3 bottom-3 z-10 flex items-center gap-1 rounded-lg border p-1 shadow-sm backdrop-blur">
         <Button
           variant="ghost"
           size="icon-sm"

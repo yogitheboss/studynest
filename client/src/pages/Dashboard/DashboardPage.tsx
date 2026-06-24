@@ -1,10 +1,21 @@
 import { useCallback, useMemo, useState } from "react";
-import { GraduationCap, Plus, Trash2 } from "lucide-react";
+import {
+  GraduationCap,
+  List,
+  Network,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useUIStore } from "@/stores/ui-store";
 import {
+  CourseContentUploader,
   CourseGraph,
+  CourseOutline,
   CreateCourseDialog,
   flattenNodes,
   levelLabel,
@@ -12,7 +23,32 @@ import {
   type CourseNode,
 } from "@/features/Courses";
 
+type ViewMode = "graph" | "outline";
+
+const UploadsView = () => (
+  <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div>
+      <h2 className="text-xl font-semibold">Your Uploaded Content</h2>
+      <p className="text-muted-foreground text-sm">
+        Files and notes you upload will show up here.
+      </p>
+    </div>
+    <div className="bg-muted/30 flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center">
+      <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
+        <Upload className="size-6" />
+      </div>
+      <div>
+        <p className="font-medium">Nothing uploaded yet</p>
+        <p className="text-muted-foreground text-sm">
+          Uploading content is coming next.
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
 export const DashboardPage = () => {
+  const activeTab = useUIStore((state) => state.activeTab);
   const {
     courses,
     selectedCourse,
@@ -23,6 +59,7 @@ export const DashboardPage = () => {
   } = useCourses();
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<CourseNode | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("graph");
 
   // "Adding info to a node" lands here later — for now we just track selection.
   const handleSelectNode = useCallback((node: CourseNode) => {
@@ -42,8 +79,12 @@ export const DashboardPage = () => {
     [selectedCourse]
   );
 
+  if (activeTab === "uploads") {
+    return <UploadsView />;
+  }
+
   return (
-    <div className="flex h-[calc(100svh-3.5rem)] flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       {/* Header row */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
@@ -97,17 +138,62 @@ export const DashboardPage = () => {
       {/* Graph / empty state */}
       {selectedCourse ? (
         <div className="flex min-h-0 flex-1 gap-4">
-          <div className="min-w-0 flex-1">
-            <CourseGraph
-              course={selectedCourse}
-              selectedNodeId={selectedNode?.id ?? null}
-              onSelectNode={handleSelectNode}
-            />
+          <div className="relative min-w-0 flex-1">
+            {viewMode === "graph" ? (
+              <CourseGraph
+                course={selectedCourse}
+                selectedNodeId={selectedNode?.id ?? null}
+                onSelectNode={handleSelectNode}
+              />
+            ) : (
+              <CourseOutline
+                course={selectedCourse}
+                selectedNodeId={selectedNode?.id ?? null}
+                onSelectNode={handleSelectNode}
+              />
+            )}
+
+            {/* View toggle — right side of the canvas */}
+            <div
+              className="bg-background/90 absolute top-3 right-3 z-20 flex items-center gap-0.5 rounded-lg border p-1 shadow-sm backdrop-blur"
+              role="group"
+              aria-label="View mode"
+            >
+              <Button
+                variant={viewMode === "graph" ? "secondary" : "ghost"}
+                size="icon-sm"
+                onClick={() => setViewMode("graph")}
+                aria-label="Graph view"
+                aria-pressed={viewMode === "graph"}
+              >
+                <Network />
+              </Button>
+              <Button
+                variant={viewMode === "outline" ? "secondary" : "ghost"}
+                size="icon-sm"
+                onClick={() => setViewMode("outline")}
+                aria-label="List view"
+                aria-pressed={viewMode === "outline"}
+              >
+                <List />
+              </Button>
+            </div>
           </div>
 
-          {/* Selected node panel — the place where "add info" will live next. */}
+          {/* Selected node panel — the place where "add info" will live next.
+              On small screens it covers the whole viewport with a close
+              button in the top-left corner. */}
           {selectedNode && (
-            <aside className="bg-card text-card-foreground w-72 shrink-0 overflow-y-auto rounded-xl border p-4">
+            <aside className="bg-card text-card-foreground fixed inset-0 z-50 overflow-y-auto p-4 md:static md:z-auto md:w-72 md:shrink-0 md:rounded-xl md:border">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setSelectedNode(null)}
+                aria-label="Close"
+                className="mb-3 md:hidden"
+              >
+                <X />
+              </Button>
               <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {levelLabel(selectedNode.depth)}
               </span>
@@ -123,8 +209,14 @@ export const DashboardPage = () => {
                 {selectedNode.children.length} direct child
                 {selectedNode.children.length === 1 ? "" : "ren"}
               </p>
-              <div className="text-muted-foreground mt-4 rounded-lg border border-dashed p-3 text-center text-xs">
-                Attaching notes &amp; resources to this node is coming next.
+              <div className="mt-4">
+                <h4 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+                  Content
+                </h4>
+                <CourseContentUploader
+                  courseId={selectedCourse.id}
+                  nodeId={selectedNode.id}
+                />
               </div>
             </aside>
           )}

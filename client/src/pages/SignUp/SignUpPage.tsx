@@ -13,7 +13,7 @@ export const SignUpPage = () => {
   return (
     <AuthShell
       title="Create your account"
-      description="Get started with info_hub in seconds."
+      description="Get started with StudyNest in seconds."
       footer={
         <>
           Already have an account?{" "}

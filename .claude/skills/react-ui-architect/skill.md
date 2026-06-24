@@ -342,6 +342,41 @@ Never generate:
 Exception:
 Only edit an existing shadcn primitive if the user explicitly asks to customize that specific file and has provided its current contents.
 
+# State Management (Zustand)
+
+Use **Zustand** for shared/global state — auth, UI chrome, and any state read
+across multiple components. For local-only state, keep `useState`.
+
+## Where stores live
+
+- **Feature state** → `features/<Feature>/stores/<name>-store.ts`, exported via
+  the feature barrel (e.g. `useAuthStore` in `features/Auth`).
+- **Cross-cutting UI state** → `stores/<name>-store.ts` (shared, domain-agnostic).
+
+## Conventions
+
+- One store per domain; name the hook `use<Domain>Store`.
+- Type the state with an `interface`; never rely on inferred `any`.
+- Co-locate actions inside the store; mutate via `set`.
+- Select narrowly to avoid needless re-renders: `useAuthStore((s) => s.user)`.
+- Server/session libraries stay the source of truth. The store **mirrors**
+  resolved data (e.g. `ProtectedLayout` syncs Better Auth's session into
+  `useAuthStore`) — it does not replace the session lifecycle.
+
+```ts
+import { create } from "zustand";
+
+interface CounterState {
+  count: number;
+  increment: () => void;
+}
+
+export const useCounterStore = create<CounterState>((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+}));
+```
+
 # Workflow Execution Loop
 
 1. Read `App.css` and identify available theme variables.

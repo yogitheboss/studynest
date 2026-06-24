@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 import { AppLayout } from "@/components/app-layout";
 import { useSession, signOut } from "../lib/auth-client";
+import { useAuthStore } from "../stores/auth-store";
 
 /**
  * Route guard + authenticated app shell. Resolves the session, redirects
@@ -13,11 +14,18 @@ import { useSession, signOut } from "../lib/auth-client";
 export const ProtectedLayout = () => {
   const { data: session, isPending } = useSession();
   const navigate = useNavigate();
+  const setUser = useAuthStore((state) => state.setUser);
+
+  // Mirror the resolved session into the global auth store.
+  useEffect(() => {
+    setUser(session?.user ?? null);
+  }, [session, setUser]);
 
   const handleSignOut = useCallback(async () => {
     await signOut();
+    setUser(null);
     navigate("/signin", { replace: true });
-  }, [navigate]);
+  }, [navigate, setUser]);
 
   if (isPending) {
     return (

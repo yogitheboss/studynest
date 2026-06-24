@@ -53,6 +53,24 @@ export interface Course {
   root: CourseNode;
 }
 
+/** A file uploaded as content for a single course node. */
+export interface Attachment {
+  /** Client-generated id, stable for the lifetime of the attachment. */
+  id: string;
+  /** Original filename as chosen by the user. */
+  name: string;
+  /** Public GCS URL the file is served from. */
+  url: string;
+  /** GCS object key (the server's `name`), used for future deletes. */
+  objectName: string;
+  /** MIME type reported on upload. */
+  contentType: string;
+  /** Size in bytes. */
+  size: number;
+  /** ISO timestamp string. */
+  uploadedAt: string;
+}
+
 /** Names for each depth level, clamped to the last entry when deeper. */
 export const LEVEL_LABELS = ["Course", "Module", "Topic", "Subtopic"] as const;
 

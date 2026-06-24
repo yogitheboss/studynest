@@ -23,7 +23,7 @@ export const AuthShell = ({
           <div className="bg-primary text-primary-foreground flex aspect-square size-10 items-center justify-center rounded-lg">
             <Library className="size-5" />
           </div>
-          <span className="text-lg font-semibold">info_hub</span>
+          <span className="text-lg font-semibold">StudyNest</span>
         </div>
 
         <section className="border-border bg-card rounded-xl border p-6 shadow-sm">

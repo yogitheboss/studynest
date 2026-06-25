@@ -1,8 +1,8 @@
-import type { Course, CourseInputNode, CourseNode } from "../types";
+import type { CourseDraft, CourseInputNode, CourseNode } from "../types";
 
-/** Discriminated result so callers can render either the course or errors. */
+/** Discriminated result so callers can render either the draft or errors. */
 export type ParseResult =
-  | { ok: true; course: Course }
+  | { ok: true; course: CourseDraft }
   | { ok: false; errors: string[] };
 
 /** Keys that, on any node, are treated as the array of child nodes. */
@@ -75,17 +75,6 @@ const normalizeNode = (
   return { id, title: title.trim(), description, depth, children };
 };
 
-/** Generate a per-course unique id without Math.random (path + timestamp). */
-const makeCourseId = (name: string): string => {
-  const slug =
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 40) || "course";
-  return `${slug}-${Date.now().toString(36)}`;
-};
-
 /**
  * Parse raw JSON text into a Course. Reports JSON syntax errors and schema
  * violations separately so the UI can guide the user.
@@ -125,9 +114,7 @@ export const parseCourseJson = (jsonText: string): ParseResult => {
   return {
     ok: true,
     course: {
-      id: makeCourseId(root.title),
       name: root.title,
-      createdAt: new Date().toISOString(),
       root,
     },
   };

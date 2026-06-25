@@ -10,6 +10,7 @@ import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
 
 import { auth } from "./auth.js";
 import { uploadPublicFile } from "./storage.js";
+import { registerCourseRoutes } from "./courses.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -139,6 +140,9 @@ app.post("/api/upload", requireAuth, uploadSingle, async (req, res) => {
     res.status(500).json({ error: "Upload failed" });
   }
 });
+
+// Course persistence + sharing (owner CRUD, visibility, public read).
+registerCourseRoutes(app, requireAuth);
 
 // Start server
 app.listen(PORT, () => {

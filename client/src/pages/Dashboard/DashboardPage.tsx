@@ -7,10 +7,14 @@ import {
   type CSSProperties,
 } from "react";
 import {
+  Globe,
   GraduationCap,
   List,
+  Loader2,
+  Lock,
   Network,
   Plus,
+  Share2,
   Trash2,
   Upload,
   X,
@@ -25,6 +29,7 @@ import {
   CourseNotes,
   CourseOutline,
   CreateCourseDialog,
+  ShareCourseDialog,
   flattenNodes,
   levelLabel,
   useCourses,
@@ -184,11 +189,15 @@ export const DashboardPage = () => {
     courses,
     selectedCourse,
     selectedId,
+    loading,
+    error,
     selectCourse,
     addCourse,
     removeCourse,
+    setVisibility,
   } = useCourses();
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [shareOpen, setShareOpen] = useState<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<CourseNode | null>(null);
   const [panelClosing, setPanelClosing] = useState<boolean>(false);
   // Point the panel's reveal expands from — captured from the tap that opened it.
@@ -253,16 +262,46 @@ export const DashboardPage = () => {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-xl font-semibold">Courses</h2>
-          <p className="text-muted-foreground text-sm">
-            {selectedCourse
-              ? `${selectedCourse.name} · ${nodeCount} node${nodeCount === 1 ? "" : "s"}`
-              : "Upload a course outline as JSON to visualize it as a graph."}
+          <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
+            {selectedCourse ? (
+              <>
+                <span>
+                  {selectedCourse.name} · {nodeCount} node
+                  {nodeCount === 1 ? "" : "s"}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium",
+                    selectedCourse.isPublic
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {selectedCourse.isPublic ? (
+                    <Globe className="size-3" />
+                  ) : (
+                    <Lock className="size-3" />
+                  )}
+                  {selectedCourse.isPublic ? "Public" : "Private"}
+                </span>
+              </>
+            ) : (
+              "Upload a course outline as JSON to visualize it as a graph."
+            )}
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus />
-          New course
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedCourse && (
+            <Button variant="outline" onClick={() => setShareOpen(true)}>
+              <Share2 />
+              Share
+            </Button>
+          )}
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus />
+            New course
+          </Button>
+        </div>
       </div>
 
       {/* Course chips */}
@@ -285,10 +324,13 @@ export const DashboardPage = () => {
               >
                 <GraduationCap className="text-primary size-3.5" />
                 {course.name}
+                {course.isPublic && (
+                  <Globe className="text-primary size-3" aria-label="Public" />
+                )}
               </button>
               <button
                 type="button"
-                onClick={() => removeCourse(course.id)}
+                onClick={() => void removeCourse(course.id).catch(() => {})}
                 aria-label={`Delete ${course.name}`}
                 className="text-muted-foreground hover:text-destructive rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100"
               >
@@ -299,8 +341,17 @@ export const DashboardPage = () => {
         </div>
       )}
 
-      {/* Graph / empty state */}
-      {selectedCourse ? (
+      {/* Loading / error / graph / empty state */}
+      {loading ? (
+        <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2">
+          <Loader2 className="size-6 animate-spin" />
+          <p className="text-sm">Loading your courses…</p>
+        </div>
+      ) : error ? (
+        <div className="border-destructive/40 bg-destructive/10 text-destructive flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border p-8 text-center text-sm">
+          <p>{error}</p>
+        </div>
+      ) : selectedCourse ? (
         <div className="flex min-h-0 flex-1 gap-4">
           <div className="relative min-w-0 flex-1">
             {viewMode === "graph" ? (
@@ -380,8 +431,21 @@ export const DashboardPage = () => {
       <CreateCourseDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onCreated={addCourse}
+        onCreated={async (draft) => {
+          await addCourse(draft);
+        }}
       />
+
+      {selectedCourse && (
+        <ShareCourseDialog
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          course={selectedCourse}
+          onSetVisibility={(isPublic) =>
+            setVisibility(selectedCourse.id, isPublic)
+          }
+        />
+      )}
     </div>
   );
 };

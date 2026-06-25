@@ -1,5 +1,12 @@
 import { useCallback, useRef, useState } from "react";
-import { AlertCircle, Check, Copy, FileUp, Sparkles } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  Copy,
+  FileUp,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,14 +18,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { Course } from "../types";
+import type { CourseDraft } from "../types";
 import { parseCourseJson } from "../lib/parseCourse";
 import { buildCoursePrompt, SAMPLE_COURSE_JSON } from "../lib/coursePrompt";
 
 interface CreateCourseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: (course: Course) => void;
+  /** Persist the parsed course; rejects on failure so the dialog can report it. */
+  onCreated: (draft: CourseDraft) => Promise<void>;
 }
 
 export const CreateCourseDialog = ({
@@ -30,6 +38,7 @@ export const CreateCourseDialog = ({
   const [jsonText, setJsonText] = useState<string>("");
   const [errors, setErrors] = useState<string[]>([]);
   const [copied, setCopied] = useState<boolean>(false);
+  const [creating, setCreating] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reset = useCallback(() => {
@@ -41,10 +50,11 @@ export const CreateCourseDialog = ({
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
+      if (creating) return; // don't close mid-save
       if (!next) reset();
       onOpenChange(next);
     },
-    [onOpenChange, reset]
+    [creating, onOpenChange, reset]
   );
 
   const handleCopyPrompt = useCallback(async () => {
@@ -74,15 +84,25 @@ export const CreateCourseDialog = ({
     []
   );
 
-  const handleCreate = useCallback(() => {
+  const handleCreate = useCallback(async () => {
     const result = parseCourseJson(jsonText);
     if (!result.ok) {
       setErrors(result.errors);
       return;
     }
-    onCreated(result.course);
-    reset();
-    onOpenChange(false);
+    setCreating(true);
+    setErrors([]);
+    try {
+      await onCreated(result.course);
+      reset();
+      onOpenChange(false);
+    } catch (err) {
+      setErrors([
+        err instanceof Error ? err.message : "Couldn't save the course.",
+      ]);
+    } finally {
+      setCreating(false);
+    }
   }, [jsonText, onCreated, onOpenChange, reset]);
 
   return (
@@ -190,11 +210,19 @@ export const CreateCourseDialog = ({
         )}
 
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => handleOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => handleOpenChange(false)}
+            disabled={creating}
+          >
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={jsonText.trim() === ""}>
-            Create course
+          <Button
+            onClick={handleCreate}
+            disabled={jsonText.trim() === "" || creating}
+          >
+            {creating && <Loader2 className="animate-spin" />}
+            {creating ? "Creating…" : "Create course"}
           </Button>
         </div>
       </DialogContent>

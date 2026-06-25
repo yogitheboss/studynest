@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { Note } from "../types";
-import { loadNotes, saveNotes } from "../lib/notes";
+import { fetchNotes, saveNotes } from "../services/coursesApi";
 
 interface UseNodeNotesResult {
   notes: Note[];
@@ -14,52 +14,76 @@ interface UseNodeNotesResult {
 }
 
 /**
- * Owns the free-text notes for a single course node, backed by localStorage.
- * Re-reads when the node selection changes and persists on every mutation.
- * Mirrors {@link useNodeAttachments}.
+ * Owns the free-text notes for a single course node, backed by the server.
+ * Loads when the node selection changes and persists the whole list on every
+ * mutation. Mirrors {@link useNodeAttachments}.
  */
 export const useNodeNotes = (
   courseId: string,
   nodeId: string
 ): UseNodeNotesResult => {
-  const [notes, setNotes] = useState<Note[]>(() => loadNotes(courseId, nodeId));
+  const [notes, setNotes] = useState<Note[]>([]);
 
-  // Reload when the selected node (or course) changes.
+  // (Re)load when the selected node (or course) changes.
   useEffect(() => {
-    setNotes(loadNotes(courseId, nodeId));
+    let active = true;
+    fetchNotes(courseId, nodeId)
+      .then((loaded) => {
+        if (active) setNotes(loaded);
+      })
+      .catch(() => {
+        if (active) setNotes([]);
+      });
+    return () => {
+      active = false;
+    };
   }, [courseId, nodeId]);
 
-  // Persist after any change to this node's list.
-  useEffect(() => {
-    saveNotes(courseId, nodeId, notes);
-  }, [courseId, nodeId, notes]);
+  // Optimistically apply locally, then persist. Persistence failures are
+  // swallowed to keep the editing UI responsive (matches the prior behaviour).
+  const persist = useCallback(
+    (next: Note[]) => {
+      setNotes(next);
+      void saveNotes(courseId, nodeId, next).catch(() => {});
+    },
+    [courseId, nodeId]
+  );
 
-  const addNote = useCallback((text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    const note: Note = {
-      id: crypto.randomUUID(),
-      text: trimmed,
-      createdAt: new Date().toISOString(),
-      updatedAt: null,
-    };
-    setNotes((prev) => [note, ...prev]);
-  }, []);
+  const addNote = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const note: Note = {
+        id: crypto.randomUUID(),
+        text: trimmed,
+        createdAt: new Date().toISOString(),
+        updatedAt: null,
+      };
+      persist([note, ...notes]);
+    },
+    [persist, notes]
+  );
 
-  const updateNote = useCallback((id: string, text: string) => {
-    const trimmed = text.trim();
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === id
-          ? { ...note, text: trimmed, updatedAt: new Date().toISOString() }
-          : note
-      )
-    );
-  }, []);
+  const updateNote = useCallback(
+    (id: string, text: string) => {
+      const trimmed = text.trim();
+      persist(
+        notes.map((note) =>
+          note.id === id
+            ? { ...note, text: trimmed, updatedAt: new Date().toISOString() }
+            : note
+        )
+      );
+    },
+    [persist, notes]
+  );
 
-  const removeNote = useCallback((id: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id));
-  }, []);
+  const removeNote = useCallback(
+    (id: string) => {
+      persist(notes.filter((note) => note.id !== id));
+    },
+    [persist, notes]
+  );
 
   return { notes, addNote, updateNote, removeNote };
 };

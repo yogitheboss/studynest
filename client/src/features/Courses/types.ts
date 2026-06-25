@@ -42,15 +42,28 @@ export interface CourseNode {
   children: CourseNode[];
 }
 
-/** A fully parsed, persisted course. */
-export interface Course {
-  /** Unique id for this course instance. */
-  id: string;
+/**
+ * A course before it has been persisted — just the parsed name and tree. The
+ * server assigns the id, share token, and timestamps on creation.
+ */
+export interface CourseDraft {
   /** Convenience mirror of `root.title`. */
   name: string;
+  root: CourseNode;
+}
+
+/** A fully persisted course as returned by the server to its owner. */
+export interface Course extends CourseDraft {
+  /** Unique id for this course instance (used in owner API calls). */
+  id: string;
+  /** Whether anyone with the public link may view this course. */
+  isPublic: boolean;
+  /** Unguessable token used to build the public share link. */
+  publicId: string;
   /** ISO timestamp string. */
   createdAt: string;
-  root: CourseNode;
+  /** ISO timestamp string of the last change, or null. */
+  updatedAt?: string | null;
 }
 
 /** A file uploaded as content for a single course node. */

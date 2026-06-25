@@ -35,8 +35,15 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
 
       # Build the image from the server/ directory using Cloud Build.
+      # --default-buckets-behavior writes logs to a regional bucket in this
+      # project (not the Google-owned default bucket), so the deployer SA can
+      # stream them instead of failing with a Viewer/Owner permission error.
       - name: Build & push image
-        run: gcloud builds submit server --tag "${IMAGE}:${{ github.sha }}"
+        run: |
+          gcloud builds submit server \
+            --tag "${IMAGE}:${{ github.sha }}" \
+            --region "$REGION" \
+            --default-buckets-behavior=regional-user-owned-bucket
 
       # Deploy the new image. Env vars and secrets already configured on the
       # service are preserved — only the image changes.

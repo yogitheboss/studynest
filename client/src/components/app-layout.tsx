@@ -26,7 +26,7 @@ export const AppLayout = ({ user, onSignOut }: AppLayoutProps) => {
           <SidebarTrigger />
           <h1 className="text-base font-semibold">Dashboard</h1>
         </header>
-        <main className="flex min-h-0 flex-1 flex-col p-4 pb-20 md:pb-4">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col p-4 pb-20 md:pb-4">
           <Outlet />
         </main>
         <MobileBottomBar />

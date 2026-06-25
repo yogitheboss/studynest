@@ -71,6 +71,18 @@ export interface Attachment {
   uploadedAt: string;
 }
 
+/** A free-text note authored as content for a single course node. */
+export interface Note {
+  /** Client-generated id, stable for the lifetime of the note. */
+  id: string;
+  /** The note body as typed by the user. */
+  text: string;
+  /** ISO timestamp string for when the note was created. */
+  createdAt: string;
+  /** ISO timestamp string for the most recent edit, or null if never edited. */
+  updatedAt: string | null;
+}
+
 /** Names for each depth level, clamped to the last entry when deeper. */
 export const LEVEL_LABELS = ["Course", "Module", "Topic", "Subtopic"] as const;
 

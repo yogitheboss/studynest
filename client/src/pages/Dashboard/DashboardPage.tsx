@@ -1,4 +1,11 @@
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   GraduationCap,
   List,
@@ -15,6 +22,7 @@ import { useUIStore } from "@/stores/ui-store";
 import {
   CourseContentUploader,
   CourseGraph,
+  CourseNotes,
   CourseOutline,
   CreateCourseDialog,
   flattenNodes,
@@ -47,6 +55,129 @@ const UploadsView = () => (
   </div>
 );
 
+const REVEAL_MS = 380;
+
+interface SelectedNodePanelProps {
+  node: CourseNode;
+  courseId: string;
+  /** Viewport coordinates the reveal expands from (the tap point). */
+  origin: { x: number; y: number };
+  /** Flips to true when a close has been requested; triggers the exit reveal. */
+  closing: boolean;
+  /** Called when the user asks to close (X button). */
+  onClose: () => void;
+  /** Called once the exit animation has finished and the panel can unmount. */
+  onClosed: () => void;
+}
+
+const SelectedNodePanel = ({
+  node,
+  courseId,
+  origin,
+  closing,
+  onClose,
+  onClosed,
+}: SelectedNodePanelProps) => {
+  // Decide once, at mount, whether to play the circular reveal. It only makes
+  // sense on small screens (the panel is fullscreen there); on md+ it's a
+  // static sidebar where a viewport-origin circle would clip oddly.
+  const [animate] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const isSmall = window.matchMedia("(max-width: 767px)").matches;
+    const motionOk = !window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches;
+    return isSmall && motionOk;
+  });
+  // `mounted` flips on the frame after mount so the 0-radius start state is
+  // painted first; the reveal is then derived (open while mounted & not closing).
+  const [mounted, setMounted] = useState(false);
+  const revealed = mounted && !closing;
+
+  useEffect(() => {
+    if (!animate) return;
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, [animate]);
+
+  // Without an animation there's no transition to wait on, so a close request
+  // must unmount the panel directly.
+  useEffect(() => {
+    if (closing && !animate) onClosed();
+  }, [closing, animate, onClosed]);
+
+  const clipStyle: CSSProperties | undefined = useMemo(() => {
+    if (!animate) return undefined;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // Radius reaching the farthest corner so the circle fully covers the screen.
+    const radius = Math.hypot(
+      Math.max(origin.x, vw - origin.x),
+      Math.max(origin.y, vh - origin.y)
+    );
+    return {
+      clipPath: `circle(${revealed ? radius : 0}px at ${origin.x}px ${origin.y}px)`,
+      transition: `clip-path ${REVEAL_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+      willChange: "clip-path",
+    };
+  }, [animate, origin, revealed]);
+
+  const handleTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
+    if (event.propertyName === "clip-path" && closing) onClosed();
+  };
+
+  return (
+    <aside
+      style={clipStyle}
+      onTransitionEnd={handleTransitionEnd}
+      className="bg-card text-card-foreground fixed inset-0 z-50 flex flex-col md:static md:z-auto md:w-72 md:shrink-0 md:rounded-xl md:border"
+    >
+      {/* Header — sticky on mobile so the close button stays reachable */}
+      <div className="bg-card sticky top-0 z-10 flex items-start gap-2 border-b p-4 md:border-b-0 md:pb-0">
+        <div className="min-w-0 flex-1">
+          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            {levelLabel(node.depth)}
+          </span>
+          <h3 className="mt-1 text-base font-semibold break-words">
+            {node.title}
+          </h3>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClose}
+          aria-label="Close"
+          className="-mr-1 shrink-0 md:hidden"
+        >
+          <X />
+        </Button>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-4 md:pt-3">
+        {node.description && (
+          <p className="text-muted-foreground text-sm">{node.description}</p>
+        )}
+        <p className="text-muted-foreground mt-4 text-xs">
+          {node.children.length} direct child
+          {node.children.length === 1 ? "" : "ren"}
+        </p>
+        <div className="mt-4">
+          <h4 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+            Notes
+          </h4>
+          <CourseNotes courseId={courseId} nodeId={node.id} />
+        </div>
+        <div className="mt-6">
+          <h4 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+            Content
+          </h4>
+          <CourseContentUploader courseId={courseId} nodeId={node.id} />
+        </div>
+      </div>
+    </aside>
+  );
+};
+
 export const DashboardPage = () => {
   const activeTab = useUIStore((state) => state.activeTab);
   const {
@@ -59,17 +190,50 @@ export const DashboardPage = () => {
   } = useCourses();
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<CourseNode | null>(null);
+  const [panelClosing, setPanelClosing] = useState<boolean>(false);
+  // Point the panel's reveal expands from — captured from the tap that opened it.
+  const [panelOrigin, setPanelOrigin] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
   const [viewMode, setViewMode] = useState<ViewMode>("graph");
 
-  // "Adding info to a node" lands here later — for now we just track selection.
+  // Track the last pointer position so the panel can reveal from the tap point.
+  const originRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  useEffect(() => {
+    const handlePointer = (event: PointerEvent) => {
+      originRef.current = { x: event.clientX, y: event.clientY };
+    };
+    window.addEventListener("pointerdown", handlePointer, true);
+    return () => window.removeEventListener("pointerdown", handlePointer, true);
+  }, []);
+
   const handleSelectNode = useCallback((node: CourseNode) => {
-    setSelectedNode((current) => (current?.id === node.id ? null : node));
+    setSelectedNode((current) => {
+      // Tapping the already-open node requests a close (with exit animation).
+      if (current?.id === node.id) {
+        setPanelClosing(true);
+        return current;
+      }
+      setPanelOrigin(originRef.current);
+      setPanelClosing(false);
+      return node;
+    });
+  }, []);
+
+  const closePanel = useCallback(() => setPanelClosing(true), []);
+
+  // Exit animation finished (or wasn't needed) — actually unmount the panel.
+  const handlePanelClosed = useCallback(() => {
+    setSelectedNode(null);
+    setPanelClosing(false);
   }, []);
 
   const handleSelectCourse = useCallback(
     (id: string) => {
       selectCourse(id);
       setSelectedNode(null);
+      setPanelClosing(false);
     },
     [selectCourse]
   );
@@ -184,41 +348,15 @@ export const DashboardPage = () => {
               On small screens it covers the whole viewport with a close
               button in the top-left corner. */}
           {selectedNode && (
-            <aside className="bg-card text-card-foreground fixed inset-0 z-50 overflow-y-auto p-4 md:static md:z-auto md:w-72 md:shrink-0 md:rounded-xl md:border">
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setSelectedNode(null)}
-                aria-label="Close"
-                className="mb-3 md:hidden"
-              >
-                <X />
-              </Button>
-              <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                {levelLabel(selectedNode.depth)}
-              </span>
-              <h3 className="mt-1 text-base font-semibold">
-                {selectedNode.title}
-              </h3>
-              {selectedNode.description && (
-                <p className="text-muted-foreground mt-2 text-sm">
-                  {selectedNode.description}
-                </p>
-              )}
-              <p className="text-muted-foreground mt-4 text-xs">
-                {selectedNode.children.length} direct child
-                {selectedNode.children.length === 1 ? "" : "ren"}
-              </p>
-              <div className="mt-4">
-                <h4 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-                  Content
-                </h4>
-                <CourseContentUploader
-                  courseId={selectedCourse.id}
-                  nodeId={selectedNode.id}
-                />
-              </div>
-            </aside>
+            <SelectedNodePanel
+              key={selectedNode.id}
+              node={selectedNode}
+              courseId={selectedCourse.id}
+              origin={panelOrigin}
+              closing={panelClosing}
+              onClose={closePanel}
+              onClosed={handlePanelClosed}
+            />
           )}
         </div>
       ) : (

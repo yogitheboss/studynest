@@ -13,7 +13,9 @@ client
   .connect()
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err.message));
-const db = client.db();
+
+/** Shared MongoDB handle, reused by our own collections (e.g. courses). */
+export const db = client.db();
 
 const trustedOrigins = [
   process.env.CLIENT_URL || "http://localhost:5173",

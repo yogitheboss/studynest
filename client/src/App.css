@@ -179,3 +179,63 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Journal (tiptap) content — preflight strips list/heading styles. */
+.journal-editor {
+  line-height: 1.6;
+}
+.journal-editor > * + * {
+  margin-top: 0.6em;
+}
+.journal-editor h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.journal-editor h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.journal-editor h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.journal-editor ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+.journal-editor ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+.journal-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.25rem;
+}
+.journal-editor ul[data-type="taskList"] li {
+  display: flex;
+  gap: 0.5rem;
+}
+.journal-editor ul[data-type="taskList"] li > label {
+  margin-top: 0.2em;
+}
+.journal-editor code {
+  background: var(--muted);
+  border-radius: 0.25rem;
+  padding: 0 0.25rem;
+  font-family: var(--font-mono);
+}
+.journal-editor pre {
+  background: var(--muted);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+.journal-editor blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 0.75rem;
+  color: var(--muted-foreground);
+}
+.journal-editor a {
+  color: var(--primary);
+  text-decoration: underline;
+}

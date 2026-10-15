@@ -10,7 +10,8 @@ import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
 
 import { auth } from "./auth.js";
 import { uploadPublicFile } from "./storage.js";
-import { registerCourseRoutes } from "./courses.js";
+import { registerCourseRoutes } from "./apps/courses/courses.routes.js";
+import { registerJournalRoutes } from "./apps/journal/journal.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -143,6 +144,9 @@ app.post("/api/upload", requireAuth, uploadSingle, async (req, res) => {
 
 // Course persistence + sharing (owner CRUD, visibility, public read).
 registerCourseRoutes(app, requireAuth);
+
+// Daily study journal.
+registerJournalRoutes(app, requireAuth);
 
 // Start server
 app.listen(PORT, () => {

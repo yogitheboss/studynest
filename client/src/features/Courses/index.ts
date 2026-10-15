@@ -8,8 +8,10 @@ export { ReadOnlyNotes } from "./components/ReadOnlyNotes";
 export { ReadOnlyAttachments } from "./components/ReadOnlyAttachments";
 export { useCourses } from "./hooks/useCourses";
 export { flattenNodes } from "./lib/parseCourse";
-export { levelLabel } from "./types";
+export { addChildNode, removeNode } from "./lib/mutateTree";
+export { levelLabel, MAX_COURSE_DEPTH } from "./types";
 export { fetchPublicCourse } from "./services/coursesApi";
+export { prefetchNodeContent } from "./services/nodeContentCache";
 export type { PublicCourse } from "./services/coursesApi";
 export type {
   Attachment,

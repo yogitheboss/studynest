@@ -58,6 +58,16 @@ export const createCourse = (draft: CourseDraft): Promise<Course> =>
     body: JSON.stringify({ name: draft.name, root: draft.root }),
   });
 
+/** Replace a course's edited tree (and name); returns the updated course. */
+export const updateCourse = (
+  id: string,
+  payload: { name?: string; root: CourseNode }
+): Promise<Course> =>
+  request(`/api/courses/${seg(id)}`, {
+    method: "PUT",
+    body: JSON.stringify({ name: payload.name, root: payload.root }),
+  });
+
 /** Permanently delete one of the user's courses. */
 export const deleteCourse = (id: string): Promise<void> =>
   request(`/api/courses/${seg(id)}`, { method: "DELETE" });

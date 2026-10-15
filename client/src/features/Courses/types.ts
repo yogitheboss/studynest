@@ -96,6 +96,12 @@ export interface Note {
   updatedAt: string | null;
 }
 
+/**
+ * Deepest node depth the tree allows (root = 0). Mirrors the server's MAX_DEPTH;
+ * children added beyond this are dropped on save, so the UI hides "add" there.
+ */
+export const MAX_COURSE_DEPTH = 6;
+
 /** Names for each depth level, clamped to the last entry when deeper. */
 export const LEVEL_LABELS = ["Course", "Module", "Topic", "Subtopic"] as const;
 

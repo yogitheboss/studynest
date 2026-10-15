@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "@/components/app-sidebar";
-import { useUIStore } from "@/stores/ui-store";
+import { useLocation, useNavigate } from "react-router-dom";
 
 /**
  * Simple primary navigation pinned to the bottom of the viewport on small
@@ -8,18 +8,18 @@ import { useUIStore } from "@/stores/ui-store";
  * opening the sidebar sheet. Hidden from `md` up, where the sidebar takes over.
  */
 export function MobileBottomBar() {
-  const activeTab = useUIStore((state) => state.activeTab);
-  const setActiveTab = useUIStore((state) => state.setActiveTab);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   return (
     <nav className="bg-background fixed inset-x-0 bottom-0 z-40 flex border-t md:hidden">
       {NAV_ITEMS.map((item) => {
-        const isActive = activeTab === item.id;
+        const isActive = pathname === item.path;
         return (
           <button
             key={item.id}
             type="button"
-            onClick={() => setActiveTab(item.id)}
+            onClick={() => navigate(item.path)}
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex flex-1 flex-col items-center gap-1 py-2 text-xs transition-colors",

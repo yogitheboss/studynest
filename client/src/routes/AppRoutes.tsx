@@ -1,7 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { ProtectedLayout } from "@/features/Auth";
-import { DashboardPage } from "@/pages/Dashboard/DashboardPage";
+import { JournalView } from "@/features/Journal";
+import { DashboardPage, UploadsView } from "@/pages/Dashboard/DashboardPage";
 import { PublicCoursePage } from "@/pages/PublicCourse/PublicCoursePage";
 import { SignInPage } from "@/pages/SignIn/SignInPage";
 import { SignUpPage } from "@/pages/SignUp/SignUpPage";
@@ -18,7 +19,10 @@ export const AppRoutes = () => {
 
       {/* Protected app shell */}
       <Route element={<ProtectedLayout />}>
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/" element={<Navigate to="/courses" replace />} />
+        <Route path="/courses" element={<DashboardPage />} />
+        <Route path="/journal" element={<JournalView />} />
+        <Route path="/uploads" element={<UploadsView />} />
       </Route>
 
       {/* Fallback */}

@@ -1,0 +1,80 @@
+import type { Attachment, Note } from "../types";
+import { fetchAttachments, fetchNotes } from "./coursesApi";
+
+/**
+ * A tiny per-(course,node) in-memory cache for content that is otherwise
+ * refetched on every node selection. Once a node's data has been loaded it
+ * stays resident for the session, so revisiting a node is instant and hovering
+ * a node can warm it up ahead of the click.
+ *
+ * The cache is module-level (shared across all hook instances) and dedupes
+ * concurrent loads, so a hover-prefetch and the click that follows it resolve
+ * to the same single request.
+ */
+interface CacheEntry<T> {
+  /** Resolved value, present once a load has succeeded. */
+  value?: T;
+  /** In-flight load, present while a request is outstanding. */
+  promise?: Promise<T>;
+}
+
+interface NodeContentCache<T> {
+  /** Synchronously read a cached value, or undefined if not loaded yet. */
+  peek(courseId: string, nodeId: string): T | undefined;
+  /** Load (deduped), caching the result. Resolves instantly when cached. */
+  load(courseId: string, nodeId: string): Promise<T>;
+  /** Fire-and-forget warm-up (e.g. on hover). Errors are swallowed. */
+  prefetch(courseId: string, nodeId: string): void;
+  /** Overwrite the cached value after a local mutation, keeping it fresh. */
+  set(courseId: string, nodeId: string, value: T): void;
+}
+
+const createNodeContentCache = <T>(
+  fetcher: (courseId: string, nodeId: string) => Promise<T>
+): NodeContentCache<T> => {
+  const cache = new Map<string, CacheEntry<T>>();
+  // Each content type has its own cache instance, so a course+node pair is a
+  // unique key within it.
+  const keyOf = (courseId: string, nodeId: string) => `${courseId}\0${nodeId}`;
+
+  const load = (courseId: string, nodeId: string): Promise<T> => {
+    const key = keyOf(courseId, nodeId);
+    const entry = cache.get(key);
+    if (entry?.value !== undefined) return Promise.resolve(entry.value);
+    if (entry?.promise) return entry.promise;
+
+    const promise = fetcher(courseId, nodeId)
+      .then((value) => {
+        cache.set(key, { value });
+        return value;
+      })
+      .catch((err) => {
+        // Drop the failed entry so a later attempt can retry from scratch.
+        cache.delete(key);
+        throw err;
+      });
+    cache.set(key, { promise });
+    return promise;
+  };
+
+  return {
+    peek: (courseId, nodeId) => cache.get(keyOf(courseId, nodeId))?.value,
+    load,
+    prefetch: (courseId, nodeId) => {
+      void load(courseId, nodeId).catch(() => {});
+    },
+    set: (courseId, nodeId, value) => {
+      cache.set(keyOf(courseId, nodeId), { value });
+    },
+  };
+};
+
+export const notesCache = createNodeContentCache<Note[]>(fetchNotes);
+export const attachmentsCache =
+  createNodeContentCache<Attachment[]>(fetchAttachments);
+
+/** Warm both notes and attachments for a node — call on hover/focus. */
+export const prefetchNodeContent = (courseId: string, nodeId: string): void => {
+  notesCache.prefetch(courseId, nodeId);
+  attachmentsCache.prefetch(courseId, nodeId);
+};

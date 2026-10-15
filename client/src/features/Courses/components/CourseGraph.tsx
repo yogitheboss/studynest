@@ -24,6 +24,8 @@ interface CourseGraphProps {
   course: Course;
   selectedNodeId: string | null;
   onSelectNode: (node: CourseNode) => void;
+  /** Called when a node is hovered/focused — used to warm its content. */
+  onHoverNode?: (node: CourseNode) => void;
 }
 
 /** Per-depth visual treatment, all sourced from theme tokens (dark-mode safe). */
@@ -62,6 +64,7 @@ export const CourseGraph = ({
   course,
   selectedNodeId,
   onSelectNode,
+  onHoverNode,
 }: CourseGraphProps) => {
   const [zoom, setZoom] = useState<number>(1);
 
@@ -160,6 +163,8 @@ export const CourseGraph = ({
                 key={node.id}
                 type="button"
                 onClick={() => onSelectNode(node)}
+                onPointerEnter={() => onHoverNode?.(node)}
+                onFocus={() => onHoverNode?.(node)}
                 style={{
                   left: x,
                   top: y,

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { Attachment } from "../types";
-import { fetchAttachments, saveAttachments } from "../services/coursesApi";
+import { saveAttachments } from "../services/coursesApi";
+import { attachmentsCache } from "../services/nodeContentCache";
 import { uploadCourseFile, validateFile } from "../services/uploadContent";
 
 interface UseNodeAttachmentsResult {
@@ -25,15 +26,26 @@ export const useNodeAttachments = (
   courseId: string,
   nodeId: string
 ): UseNodeAttachmentsResult => {
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  // Seed from cache so revisiting an already-loaded node paints instantly.
+  const [attachments, setAttachments] = useState<Attachment[]>(
+    () => attachmentsCache.peek(courseId, nodeId) ?? []
+  );
   const [uploading, setUploading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // (Re)load when the selected node (or course) changes, clearing any stale
-  // upload error once the new node's list resolves.
+  // upload error once the new node's list resolves. A cache hit short-circuits
+  // the request; a miss loads (deduped with any hover-prefetch).
   useEffect(() => {
     let active = true;
-    fetchAttachments(courseId, nodeId)
+    const cached = attachmentsCache.peek(courseId, nodeId);
+    if (cached) {
+      setAttachments(cached);
+      setError(null);
+      return;
+    }
+    attachmentsCache
+      .load(courseId, nodeId)
       .then((loaded) => {
         if (!active) return;
         setAttachments(loaded);
@@ -50,6 +62,7 @@ export const useNodeAttachments = (
   const persist = useCallback(
     (next: Attachment[]) => {
       setAttachments(next);
+      attachmentsCache.set(courseId, nodeId, next);
       void saveAttachments(courseId, nodeId, next).catch(() => {});
     },
     [courseId, nodeId]

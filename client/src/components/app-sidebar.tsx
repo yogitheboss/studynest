@@ -1,6 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   GraduationCap,
+  NotebookPen,
   Upload,
   Settings,
   Sun,
@@ -11,7 +13,6 @@ import {
 } from "lucide-react";
 
 import { useTheme } from "@/hooks/use-theme";
-import { useUIStore, type AppTab } from "@/stores/ui-store";
 import {
   Sidebar,
   SidebarContent,
@@ -40,7 +41,9 @@ interface AppSidebarProps {
 }
 
 export interface NavItem {
-  id: AppTab;
+  id: string;
+  /** Route this tab lives at. */
+  path: string;
   label: string;
   icon: LucideIcon;
   /** Shorter label for the cramped mobile bottom bar. */
@@ -50,12 +53,21 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   {
     id: "courses",
+    path: "/courses",
     label: "Courses",
     shortLabel: "Courses",
     icon: GraduationCap,
   },
   {
+    id: "journal",
+    path: "/journal",
+    label: "Studied Today",
+    shortLabel: "Journal",
+    icon: NotebookPen,
+  },
+  {
     id: "uploads",
+    path: "/uploads",
     label: "Your Uploaded Content",
     shortLabel: "Uploads",
     icon: Upload,
@@ -71,8 +83,10 @@ const getInitials = (name: string): string =>
     .join("") || "?";
 
 export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
-  const activeTab = useUIStore((state) => state.activeTab);
-  const setActiveTab = useUIStore((state) => state.setActiveTab);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  // Fall back to initials when there's no image or it fails to load.
+  const [imageFailed, setImageFailed] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const initials = useMemo(() => getInitials(user.name), [user.name]);
@@ -98,9 +112,9 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
               {NAV_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    isActive={activeTab === item.id}
+                    isActive={pathname === item.path}
                     tooltip={item.label}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => navigate(item.path)}
                   >
                     <item.icon />
                     <span>{item.label}</span>
@@ -140,10 +154,12 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
               tooltip={user.email}
               className="cursor-default hover:bg-transparent active:bg-transparent"
             >
-              {user.image ? (
+              {user.image && !imageFailed ? (
                 <img
                   src={user.image}
                   alt=""
+                  referrerPolicy="no-referrer"
+                  onError={() => setImageFailed(true)}
                   className="size-8 shrink-0 rounded-lg object-cover"
                 />
               ) : (

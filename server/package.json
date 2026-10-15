@@ -12,13 +12,15 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.21.0",
+    "@google/genai": "^2.30.0",
     "better-auth": "^1.6.20",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "mongodb": "^7.3.0",
     "morgan": "^1.11.0",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "prettier": "^3.8.4"

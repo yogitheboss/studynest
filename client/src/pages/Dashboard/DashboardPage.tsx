@@ -22,23 +22,25 @@ import {
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useUIStore } from "@/stores/ui-store";
 import {
+  addChildNode,
   CourseContentUploader,
   CourseGraph,
   CourseNotes,
   CourseOutline,
   CreateCourseDialog,
-  ShareCourseDialog,
   flattenNodes,
   levelLabel,
+  prefetchNodeContent,
+  removeNode,
+  ShareCourseDialog,
   useCourses,
   type CourseNode,
 } from "@/features/Courses";
 
 type ViewMode = "graph" | "outline";
 
-const UploadsView = () => (
+export const UploadsView = () => (
   <div className="flex min-h-0 flex-1 flex-col gap-4">
     <div>
       <h2 className="text-xl font-semibold">Your Uploaded Content</h2>
@@ -184,7 +186,6 @@ const SelectedNodePanel = ({
 };
 
 export const DashboardPage = () => {
-  const activeTab = useUIStore((state) => state.activeTab);
   const {
     courses,
     selectedCourse,
@@ -194,6 +195,7 @@ export const DashboardPage = () => {
     selectCourse,
     addCourse,
     removeCourse,
+    updateCourseTree,
     setVisibility,
   } = useCourses();
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -230,6 +232,14 @@ export const DashboardPage = () => {
     });
   }, []);
 
+  // Warm a node's notes/attachments on hover so the panel is ready by click.
+  const handleHoverNode = useCallback(
+    (node: CourseNode) => {
+      if (selectedCourse) prefetchNodeContent(selectedCourse.id, node.id);
+    },
+    [selectedCourse]
+  );
+
   const closePanel = useCallback(() => setPanelClosing(true), []);
 
   // Exit animation finished (or wasn't needed) — actually unmount the panel.
@@ -247,14 +257,39 @@ export const DashboardPage = () => {
     [selectCourse]
   );
 
+  const handleAddChild = useCallback(
+    (parent: CourseNode, title: string) => {
+      if (!selectedCourse) return;
+      const root = addChildNode(selectedCourse.root, parent.id, { title });
+      void updateCourseTree(selectedCourse.id, root).catch(() => {});
+    },
+    [selectedCourse, updateCourseTree]
+  );
+
+  const handleRemoveNode = useCallback(
+    (node: CourseNode) => {
+      if (!selectedCourse) return;
+      const root = removeNode(selectedCourse.root, node.id);
+      if (root === selectedCourse.root) return; // root can't be removed
+      // Drop the panel if the node it shows was just removed (or was a descendant).
+      setSelectedNode((current) => {
+        if (!current) return current;
+        const stillThere = flattenNodes(root).some((n) => n.id === current.id);
+        if (!stillThere) {
+          setPanelClosing(false);
+          return null;
+        }
+        return current;
+      });
+      void updateCourseTree(selectedCourse.id, root).catch(() => {});
+    },
+    [selectedCourse, updateCourseTree]
+  );
+
   const nodeCount = useMemo(
     () => (selectedCourse ? flattenNodes(selectedCourse.root).length : 0),
     [selectedCourse]
   );
-
-  if (activeTab === "uploads") {
-    return <UploadsView />;
-  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -359,12 +394,16 @@ export const DashboardPage = () => {
                 course={selectedCourse}
                 selectedNodeId={selectedNode?.id ?? null}
                 onSelectNode={handleSelectNode}
+                onHoverNode={handleHoverNode}
               />
             ) : (
               <CourseOutline
                 course={selectedCourse}
                 selectedNodeId={selectedNode?.id ?? null}
                 onSelectNode={handleSelectNode}
+                onHoverNode={handleHoverNode}
+                onAddChild={handleAddChild}
+                onRemoveNode={handleRemoveNode}
               />
             )}
 

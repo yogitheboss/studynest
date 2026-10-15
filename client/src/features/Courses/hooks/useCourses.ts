@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { Course, CourseDraft } from "../types";
+import type { Course, CourseDraft, CourseNode } from "../types";
 import {
   createCourse,
   deleteCourse,
   listCourses,
   setCourseVisibility,
+  updateCourse,
 } from "../services/coursesApi";
 
 interface UseCoursesResult {
@@ -21,6 +22,15 @@ interface UseCoursesResult {
   addCourse: (draft: CourseDraft) => Promise<Course>;
   /** Delete a course on the server and drop it from the list. */
   removeCourse: (id: string) => Promise<void>;
+  /**
+   * Replace a course's node tree (optimistically), persisting the edit. The
+   * name follows the root title unless given explicitly.
+   */
+  updateCourseTree: (
+    id: string,
+    root: CourseNode,
+    name?: string
+  ) => Promise<void>;
   /** Toggle a course's public visibility; updates the cached share state. */
   setVisibility: (id: string, isPublic: boolean) => Promise<void>;
 }
@@ -80,6 +90,31 @@ export const useCourses = (): UseCoursesResult => {
     });
   }, []);
 
+  const updateCourseTree = useCallback(
+    async (id: string, root: CourseNode, name?: string) => {
+      // Apply the edit locally first so the tree responds instantly.
+      setCourses((prev) =>
+        prev.map((course) =>
+          course.id === id
+            ? { ...course, root, name: name ?? course.name }
+            : course
+        )
+      );
+      try {
+        const updated = await updateCourse(id, { name, root });
+        setCourses((prev) =>
+          prev.map((course) => (course.id === id ? updated : course))
+        );
+      } catch (err) {
+        // Re-sync from the server so a failed save can't leave a stale tree.
+        const list = await listCourses().catch(() => null);
+        if (list) setCourses(list);
+        throw err;
+      }
+    },
+    []
+  );
+
   const setVisibility = useCallback(async (id: string, isPublic: boolean) => {
     const next = await setCourseVisibility(id, isPublic);
     setCourses((prev) =>
@@ -105,6 +140,7 @@ export const useCourses = (): UseCoursesResult => {
     selectCourse,
     addCourse,
     removeCourse,
+    updateCourseTree,
     setVisibility,
   };
 };

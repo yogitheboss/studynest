@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { Note } from "../types";
-import { fetchNotes, saveNotes } from "../services/coursesApi";
+import { saveNotes } from "../services/coursesApi";
+import { notesCache } from "../services/nodeContentCache";
 
 interface UseNodeNotesResult {
   notes: Note[];
@@ -22,12 +23,23 @@ export const useNodeNotes = (
   courseId: string,
   nodeId: string
 ): UseNodeNotesResult => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  // Seed from cache so revisiting an already-loaded node paints instantly with
+  // no fetch flash. Empty array when this node hasn't been loaded yet.
+  const [notes, setNotes] = useState<Note[]>(
+    () => notesCache.peek(courseId, nodeId) ?? []
+  );
 
-  // (Re)load when the selected node (or course) changes.
+  // (Re)load when the selected node (or course) changes. A cache hit short-
+  // circuits the request; a miss loads (deduped with any hover-prefetch).
   useEffect(() => {
     let active = true;
-    fetchNotes(courseId, nodeId)
+    const cached = notesCache.peek(courseId, nodeId);
+    if (cached) {
+      setNotes(cached);
+      return;
+    }
+    notesCache
+      .load(courseId, nodeId)
       .then((loaded) => {
         if (active) setNotes(loaded);
       })
@@ -39,11 +51,13 @@ export const useNodeNotes = (
     };
   }, [courseId, nodeId]);
 
-  // Optimistically apply locally, then persist. Persistence failures are
-  // swallowed to keep the editing UI responsive (matches the prior behaviour).
+  // Optimistically apply locally, update the cache so a later revisit sees the
+  // new state, then persist. Persistence failures are swallowed to keep the
+  // editing UI responsive (matches the prior behaviour).
   const persist = useCallback(
     (next: Note[]) => {
       setNotes(next);
+      notesCache.set(courseId, nodeId, next);
       void saveNotes(courseId, nodeId, next).catch(() => {});
     },
     [courseId, nodeId]

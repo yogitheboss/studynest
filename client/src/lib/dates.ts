@@ -19,3 +19,12 @@ export const formatDateKey = (key: string): string => {
     year: "numeric",
   });
 };
+
+/** Whole days from `from` to `to` (negative when `to` is earlier). */
+export const daysBetween = (from: string, to: string): number => {
+  const utc = (key: string): number => {
+    const [y, m, d] = key.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((utc(to) - utc(from)) / 86_400_000);
+};

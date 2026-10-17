@@ -15,7 +15,7 @@ import { useJournalEntry } from "../hooks/useJournalEntry";
 import { useJournalList } from "../hooks/useJournalList";
 import { useRecorder } from "../hooks/useRecorder";
 import { fixEntry, transcribeAudio } from "../services/journalApi";
-import { formatDateKey, shiftDateKey, todayKey } from "../lib/dates";
+import { formatDateKey, shiftDateKey, todayKey } from "@/lib/dates";
 import type { SaveStatus } from "../types";
 import { JournalEditor } from "./JournalEditor";
 

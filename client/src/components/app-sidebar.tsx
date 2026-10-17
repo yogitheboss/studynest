@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
+  CalendarCheck,
   GraduationCap,
   NotebookPen,
   Upload,
@@ -57,6 +58,13 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Courses",
     shortLabel: "Courses",
     icon: GraduationCap,
+  },
+  {
+    id: "plan",
+    path: "/plan",
+    label: "Exam Plan",
+    shortLabel: "Plan",
+    icon: CalendarCheck,
   },
   {
     id: "journal",

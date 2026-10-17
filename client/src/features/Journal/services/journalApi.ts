@@ -1,26 +1,5 @@
+import { API_BASE_URL, request } from "@/lib/api";
 import type { JournalEntry, JournalSummary } from "../types";
-
-/** API origin. Mirrors the auth client's fallback for local development. */
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  import.meta.env.VITE_AUTH_BASE_URL ??
-  "http://localhost:3000";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: "include",
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
-    ...init,
-  });
-  if (!response.ok) {
-    const message = await response
-      .json()
-      .then((data: { error?: string }) => data.error)
-      .catch(() => null);
-    throw new Error(message ?? `Request failed (${response.status}).`);
-  }
-  return (await response.json()) as T;
-}
 
 export const listEntries = (): Promise<JournalSummary[]> =>
   request("/api/journal");

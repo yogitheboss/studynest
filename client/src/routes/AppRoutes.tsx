@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedLayout } from "@/features/Auth";
 import { JournalView } from "@/features/Journal";
 import { DashboardPage, UploadsView } from "@/pages/Dashboard/DashboardPage";
+import { PlanPage } from "@/pages/Plan/PlanPage";
 import { PublicCoursePage } from "@/pages/PublicCourse/PublicCoursePage";
 import { SignInPage } from "@/pages/SignIn/SignInPage";
 import { SignUpPage } from "@/pages/SignUp/SignUpPage";
@@ -21,6 +22,7 @@ export const AppRoutes = () => {
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<Navigate to="/courses" replace />} />
         <Route path="/courses" element={<DashboardPage />} />
+        <Route path="/plan" element={<PlanPage />} />
         <Route path="/journal" element={<JournalView />} />
         <Route path="/uploads" element={<UploadsView />} />
       </Route>

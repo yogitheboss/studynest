@@ -45,4 +45,7 @@ export function registerJournalRoutes(app, requireAuth) {
   app.get("/api/journal", requireAuth, journalController.list);
   app.get("/api/journal/:date", requireAuth, journalController.get);
   app.put("/api/journal/:date", requireAuth, journalController.save);
+
+  app.get("/api/todos", requireAuth, journalController.getTodos);
+  app.put("/api/todos", requireAuth, journalController.saveTodos);
 }

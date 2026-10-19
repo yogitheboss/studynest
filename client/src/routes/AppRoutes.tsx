@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { ProtectedLayout } from "@/features/Auth";
-import { JournalView } from "@/features/Journal";
+import { JournalView, TodoView } from "@/features/Journal";
 import { DashboardPage, UploadsView } from "@/pages/Dashboard/DashboardPage";
 import { PlanPage } from "@/pages/Plan/PlanPage";
 import { PublicCoursePage } from "@/pages/PublicCourse/PublicCoursePage";
@@ -24,6 +24,7 @@ export const AppRoutes = () => {
         <Route path="/courses" element={<DashboardPage />} />
         <Route path="/plan" element={<PlanPage />} />
         <Route path="/journal" element={<JournalView />} />
+        <Route path="/todos" element={<TodoView />} />
         <Route path="/uploads" element={<UploadsView />} />
       </Route>
 

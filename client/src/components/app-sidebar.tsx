@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarCheck,
+  ListTodo,
   GraduationCap,
   NotebookPen,
   Upload,
@@ -72,6 +73,13 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Studied Today",
     shortLabel: "Journal",
     icon: NotebookPen,
+  },
+  {
+    id: "todos",
+    path: "/todos",
+    label: "To do",
+    shortLabel: "To do",
+    icon: ListTodo,
   },
   {
     id: "uploads",

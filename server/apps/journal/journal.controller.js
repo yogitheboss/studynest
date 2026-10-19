@@ -52,8 +52,22 @@ export const journalController = {
     );
   },
 
-  // POST /api/journal/transcribe — multipart "audio"; Groq Whisper → Gemini
-  // formatting. Returns markdown, saves nothing (client appends + saves).
+  // GET /api/todos — the user's single, undated todo list.
+  async getTodos(req, res) {
+    res.json(await journalService.getTodos(req.session.user.id));
+  },
+
+  // PUT /api/todos
+  async saveTodos(req, res) {
+    const body = markdownBodySchema.safeParse(req.body ?? {});
+    if (!body.success) return badRequest(res, body);
+    res.json(
+      await journalService.saveTodos(req.session.user.id, body.data.markdown)
+    );
+  },
+
+  // POST /api/journal/transcribe[?kind=todo] — multipart "audio"; Groq Whisper
+  // → Gemini formatting. Returns markdown, saves nothing (client appends + saves).
   async transcribe(req, res) {
     if (!req.file) return res.status(400).json({ error: "No audio provided." });
     // Drop ";codecs=opus" and relabel video/webm-style recordings as audio.
@@ -68,7 +82,8 @@ export const journalController = {
       const transcript = await transcribeAudio(req.file.buffer, mimeType);
       if (!transcript) return "";
       // Formatting is a nice-to-have: if Gemini is down, keep the raw words.
-      return formatTranscript(transcript).catch((err) => {
+      const kind = req.query.kind === "todo" ? "todo" : "journal";
+      return formatTranscript(transcript, kind).catch((err) => {
         console.error(
           "Gemini formatting failed, using raw transcript:",
           err.message

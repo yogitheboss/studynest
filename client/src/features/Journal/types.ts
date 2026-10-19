@@ -1,6 +1,5 @@
-/** One day's journal entry. `date` is the client's local YYYY-MM-DD. */
-export interface JournalEntry {
-  date: string;
+/** A saved markdown doc: one day's journal entry or the todo list. */
+export interface MarkdownDoc {
   markdown: string;
   updatedAt: string | null;
 }

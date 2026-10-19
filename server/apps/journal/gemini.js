@@ -18,7 +18,13 @@ Turn it into a clean markdown journal snippet: short bullet points, grouped unde
 Fix transcription errors, filler words and false starts, but keep every fact they mentioned. Do not invent anything.
 Return only the markdown, no preamble and no code fences.`;
 
-const FIX_PROMPT = `You are editing a student's daily study journal written in markdown.
+const TODO_PROMPT = `Below is a raw speech-to-text transcript of a student listing things they need to do, plans and ideas.
+Turn it into a markdown checklist: one "- [ ] " item per task, short and actionable.
+If the items span several areas (e.g. study, projects, ideas), group them under small "###" headings; otherwise no headings.
+Fix transcription errors, filler words and false starts, but keep every task they mentioned. Do not invent anything.
+Return only the markdown, no preamble and no code fences.`;
+
+const FIX_PROMPT = `You are editing a student's markdown notes (a study journal or a todo checklist).
 Fix spelling, grammar and markdown formatting (consistent headings, lists, spacing).
 Keep the meaning, the language, the voice and all of the content — do not add, summarize or remove information.
 Return only the corrected markdown, no preamble and no code fences.`;
@@ -74,9 +80,11 @@ const generate = async (label, prompt, text) => {
   throw lastErr;
 };
 
-/** Raw transcript → formatted markdown snippet. */
-export const formatTranscript = (transcript) =>
-  generate("format", FORMAT_PROMPT, transcript);
+/** Raw transcript → formatted markdown snippet (journal notes or a todo checklist). */
+export const formatTranscript = (transcript, kind = "journal") =>
+  kind === "todo"
+    ? generate("todo", TODO_PROMPT, transcript)
+    : generate("format", FORMAT_PROMPT, transcript);
 
 /** Fix spelling/grammar/formatting of an existing entry. */
 export const fixMarkdown = (markdown) => generate("fix", FIX_PROMPT, markdown);

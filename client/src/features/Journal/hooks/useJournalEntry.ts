@@ -16,19 +16,20 @@ interface UseJournalEntryResult {
 }
 
 /**
- * Loads one day's entry and debounce-saves edits. A pending save is flushed
- * (not dropped) when the date changes or the view unmounts, and save failures
- * surface as `status: "error"` instead of being swallowed.
+ * Loads one markdown doc (a day's entry, or the todo list) from `path` and
+ * debounce-saves edits. A pending save is flushed (not dropped) when the path
+ * changes or the view unmounts, and save failures surface as `status: "error"`
+ * instead of being swallowed.
  */
-export const useJournalEntry = (date: string): UseJournalEntryResult => {
+export const useJournalEntry = (path: string): UseJournalEntryResult => {
   const [markdown, setMarkdownState] = useState<string>("");
-  // Which date the current markdown/error belongs to; loading until it matches.
-  const [loadedDate, setLoadedDate] = useState<string | null>(null);
+  // Which path the current markdown/error belongs to; loading until it matches.
+  const [loadedPath, setLoadedPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedCount, setSavedCount] = useState<number>(0);
 
-  const pending = useRef<{ date: string; markdown: string } | null>(null);
+  const pending = useRef<{ path: string; markdown: string } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flush = useCallback(() => {
@@ -38,7 +39,7 @@ export const useJournalEntry = (date: string): UseJournalEntryResult => {
     if (!job) return;
     pending.current = null;
     setStatus("saving");
-    saveEntry(job.date, job.markdown)
+    saveEntry(job.path, job.markdown)
       .then(() => {
         // A newer edit may have queued while this one was in flight.
         if (!pending.current) setStatus("saved");
@@ -49,37 +50,37 @@ export const useJournalEntry = (date: string): UseJournalEntryResult => {
 
   useEffect(() => {
     let active = true;
-    getEntry(date)
+    getEntry(path)
       .then((entry) => {
         if (!active) return;
         setMarkdownState(entry.markdown);
         setError(null);
         setStatus("idle");
-        setLoadedDate(date);
+        setLoadedPath(path);
       })
       .catch((err: Error) => {
         if (!active) return;
         setError(err.message);
-        setLoadedDate(date);
+        setLoadedPath(path);
       });
     return () => {
       active = false;
       flush();
     };
-  }, [date, flush]);
+  }, [path, flush]);
 
   const setMarkdown = useCallback(
     (next: string) => {
       setMarkdownState(next);
-      pending.current = { date, markdown: next };
+      pending.current = { path, markdown: next };
       setStatus("saving");
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(flush, SAVE_DELAY_MS);
     },
-    [date, flush]
+    [path, flush]
   );
 
-  const loading = loadedDate !== date;
+  const loading = loadedPath !== path;
   return {
     markdown,
     setMarkdown,

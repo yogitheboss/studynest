@@ -1,6 +1,6 @@
 # StudyNest
 
-A personal study hub: organise courses as topic trees, attach notes and files to every topic, share courses publicly, and keep a daily **"Studied Today"** journal you can type into or simply talk to.
+A personal study hub: organise courses as topic trees, attach notes and files to every topic, share courses publicly, follow a day-by-day exam plan, and keep a daily **"Studied Today"** journal you can type into or simply talk to.
 
 ## Features
 
@@ -14,6 +14,12 @@ A personal study hub: organise courses as topic trees, attach notes and files to
   - **Voice notes**: record yourself talking about what you studied. The audio is transcribed (Groq Whisper), formatted into clean markdown (Gemini) and added after the entry's existing text. Audio is never stored.
   - **AI fix**: one click to fix spelling, grammar and markdown formatting without changing the content.
   - Jump to any day, browse past days, and download any entry as a `.md` file.
+- **Exam Plan**
+  - Set your exam and its date, then add subjects by pasting `Subject -> YYYY-MM-DD` lines or your whole syllabus as JSON (paste or upload). A **Copy AI prompt** button turns any syllabus into that JSON via ChatGPT or Claude.
+  - Countdown to the exam, subjects done against what was planned by today, and total questions solved.
+  - **Overdue / Today / Next 7 days** lists. Unfinished subjects stay in Overdue until you finish them or move them to today.
+  - Each subject has a question target (100 by default), a solved counter and notes for concepts and related topics. Reaching the target marks it done.
+  - Finishing a subject schedules revisions 1, 3, 7 and 21 days later (never after the exam), each showing the notes you took.
 - **Sign in with Google**, light/dark theme, and a mobile-first layout with a bottom navigation bar on phones.
 
 ## Tech stack
@@ -37,7 +43,7 @@ A personal study hub: organise courses as topic trees, attach notes and files to
 ├── client/                  # React app (Vite)
 │   └── src/
 │       ├── pages/           # Route entry points (Dashboard, SignIn, PublicCourse, …)
-│       ├── features/        # Domain modules: Auth, Courses, Journal
+│       ├── features/        # Domain modules: Auth, Courses, Journal, Plan
 │       ├── components/      # Shared UI (layout, sidebar, shadcn primitives in ui/)
 │       ├── routes/          # Route table
 │       └── App.css          # Theme tokens (light/dark)
@@ -47,7 +53,8 @@ A personal study hub: organise courses as topic trees, attach notes and files to
 │   ├── storage.js           # Google Cloud Storage uploads
 │   └── apps/
 │       ├── courses/         # routes → controller → service (+ zod schema)
-│       └── journal/         # same pattern, plus groq.js / gemini.js
+│       ├── journal/         # same pattern, plus groq.js / gemini.js
+│       └── plan/            # same pattern, plus plan.schedule.js (revisions)
 └── .github/workflows/       # Backend auto-deploy to Cloud Run
 ```
 
@@ -131,6 +138,7 @@ Open http://localhost:5173 and sign in with Google.
 | client | `npm run build`                   | Type-check and production build   |
 | client | `npm run lint`                    | ESLint                            |
 | server | `npm start`                       | Run the API without watch mode    |
+| server | `npm test`                        | Unit tests (`node --test`)        |
 | root   | `npm run format` / `format:check` | Prettier across client and server |
 
 ## Deploying
@@ -170,3 +178,11 @@ All routes except the public course route require a session cookie.
 | GET/PUT    | `/api/journal/:date`                   | Read / save a day's markdown (`YYYY-MM-DD`)      |
 | POST       | `/api/journal/transcribe`              | Multipart `audio` (≤ 20 MB) → formatted markdown |
 | POST       | `/api/journal/fix`                     | `{ markdown }` → corrected markdown              |
+| GET/PUT    | `/api/plan`                            | Read the plan (null before setup) / save exam    |
+| POST       | `/api/plan/items`                      | Add subjects                                     |
+| PATCH      | `/api/plan/items/:itemId`              | Done / undo / reschedule / solved count / notes  |
+| DELETE     | `/api/plan/items/:itemId`              | Delete a subject and its revisions               |
+
+## Roadmap
+
+Planned features that aren't built yet are listed in [ROADMAP.md](ROADMAP.md).

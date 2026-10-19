@@ -1,38 +1,20 @@
-import type { JournalEntry, JournalSummary } from "../types";
-
-/** API origin. Mirrors the auth client's fallback for local development. */
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  import.meta.env.VITE_AUTH_BASE_URL ??
-  "http://localhost:3000";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: "include",
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
-    ...init,
-  });
-  if (!response.ok) {
-    const message = await response
-      .json()
-      .then((data: { error?: string }) => data.error)
-      .catch(() => null);
-    throw new Error(message ?? `Request failed (${response.status}).`);
-  }
-  return (await response.json()) as T;
-}
+import { API_BASE_URL, request } from "@/lib/api";
+import type { JournalSummary, MarkdownDoc } from "../types";
 
 export const listEntries = (): Promise<JournalSummary[]> =>
   request("/api/journal");
 
-export const getEntry = (date: string): Promise<JournalEntry> =>
-  request(`/api/journal/${date}`);
+/** Path of one day's entry; the todo list lives at TODOS_PATH. */
+export const entryPath = (date: string): string => `/api/journal/${date}`;
+export const TODOS_PATH = "/api/todos";
+
+export const getEntry = (path: string): Promise<MarkdownDoc> => request(path);
 
 export const saveEntry = (
-  date: string,
+  path: string,
   markdown: string
-): Promise<JournalEntry> =>
-  request(`/api/journal/${date}`, {
+): Promise<MarkdownDoc> =>
+  request(path, {
     method: "PUT",
     body: JSON.stringify({ markdown }),
   });
@@ -44,17 +26,26 @@ export const fixEntry = (markdown: string): Promise<{ markdown: string }> =>
     body: JSON.stringify({ markdown }),
   });
 
-/** Gemini: markdown transcription of a voice note. The audio isn't stored. */
-export const transcribeAudio = async (audio: Blob): Promise<string> => {
+/**
+ * Gemini: markdown transcription of a voice note, as journal notes or (kind
+ * "todo") a checklist. The audio isn't stored.
+ */
+export const transcribeAudio = async (
+  audio: Blob,
+  kind: "journal" | "todo" = "journal"
+): Promise<string> => {
   const form = new FormData();
   const ext = audio.type.includes("mp4") ? "m4a" : "webm";
   form.append("audio", audio, `note.${ext}`);
   // Raw fetch: request() would force a JSON Content-Type over the multipart one.
-  const response = await fetch(`${API_BASE_URL}/api/journal/transcribe`, {
-    method: "POST",
-    credentials: "include",
-    body: form,
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/journal/transcribe?kind=${kind}`,
+    {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    }
+  );
   const data = (await response.json().catch(() => ({}))) as {
     markdown?: string;
     error?: string;

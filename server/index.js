@@ -12,6 +12,7 @@ import { auth } from "./auth.js";
 import { uploadPublicFile } from "./storage.js";
 import { registerCourseRoutes } from "./apps/courses/courses.routes.js";
 import { registerJournalRoutes } from "./apps/journal/journal.routes.js";
+import { registerPlanRoutes } from "./apps/plan/plan.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -147,6 +148,9 @@ registerCourseRoutes(app, requireAuth);
 
 // Daily study journal.
 registerJournalRoutes(app, requireAuth);
+
+// Exam prep plan.
+registerPlanRoutes(app, requireAuth);
 
 // Start server
 app.listen(PORT, () => {

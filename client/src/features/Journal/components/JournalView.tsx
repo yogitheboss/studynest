@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { useJournalEntry } from "../hooks/useJournalEntry";
 import { useJournalList } from "../hooks/useJournalList";
 import { useRecorder } from "../hooks/useRecorder";
-import { fixEntry, transcribeAudio } from "../services/journalApi";
-import { formatDateKey, shiftDateKey, todayKey } from "../lib/dates";
+import { entryPath, fixEntry, transcribeAudio } from "../services/journalApi";
+import { formatDateKey, shiftDateKey, todayKey } from "@/lib/dates";
 import type { SaveStatus } from "../types";
 import { JournalEditor } from "./JournalEditor";
 
@@ -45,7 +45,7 @@ const formatElapsed = (s: number): string =>
 export const JournalView = () => {
   const [date, setDate] = useState<string>(todayKey);
   const { markdown, setMarkdown, loading, error, status, savedCount } =
-    useJournalEntry(date);
+    useJournalEntry(entryPath(date));
   const pastDays = useJournalList(savedCount);
   const isToday = date === todayKey();
   const recorder = useRecorder();

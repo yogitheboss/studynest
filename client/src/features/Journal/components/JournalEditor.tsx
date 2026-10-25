@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
@@ -35,6 +35,9 @@ export const JournalEditor = ({
   onChange,
   disabled = false,
 }: JournalEditorProps) => {
+  // Markdown the editor last emitted or was given, so the sync effect skips
+  // its own echoes without re-serializing (and re-parsing on mount).
+  const lastValue = useRef(value);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -49,14 +52,21 @@ export const JournalEditor = ({
         class: "journal-editor min-h-[50vh] px-4 py-3 outline-none",
       },
     },
-    onUpdate: ({ editor: e }) => onChange(e.getMarkdown()),
+    onUpdate: ({ editor: e }) => {
+      lastValue.current = e.getMarkdown();
+      onChange(lastValue.current);
+    },
   });
 
-  // Sync markdown pushed in from outside (transcription append, AI fix).
+  // Sync markdown pushed in from outside (transcription append, AI fix,
+  // revalidated fetch). No update event: the caller already has this value.
   useEffect(() => {
-    if (editor && value !== editor.getMarkdown()) {
-      editor.commands.setContent(value, { contentType: "markdown" });
-    }
+    if (!editor || value === lastValue.current) return;
+    lastValue.current = value;
+    editor.commands.setContent(value, {
+      contentType: "markdown",
+      emitUpdate: false,
+    });
   }, [editor, value]);
 
   useEffect(() => {

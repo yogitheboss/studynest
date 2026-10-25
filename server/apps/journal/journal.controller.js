@@ -1,7 +1,14 @@
 import { journalService } from "./journal.service.js";
 import { fixMarkdown, formatTranscript } from "./gemini.js";
 import { transcribeAudio } from "./groq.js";
-import { dateSchema, markdownBodySchema } from "./journal.schema.js";
+import {
+  dateSchema,
+  markdownBodySchema,
+  todoCreateSchema,
+  todoPatchSchema,
+} from "./journal.schema.js";
+
+const notFound = (res) => res.status(404).json({ error: "Note not found." });
 
 const badRequest = (res, parsed) =>
   res
@@ -52,18 +59,74 @@ export const journalController = {
     );
   },
 
-  // GET /api/todos — the user's single, undated todo list.
-  async getTodos(req, res) {
-    res.json(await journalService.getTodos(req.session.user.id));
+  // GET /api/todos — the user's todo notes, without tasks/markdown.
+  async listTodos(req, res) {
+    res.json(await journalService.listTodos(req.session.user.id));
   },
 
-  // PUT /api/todos
-  async saveTodos(req, res) {
+  // POST /api/todos — { title?, date? }
+  async createTodo(req, res) {
+    const body = todoCreateSchema.safeParse(req.body ?? {});
+    if (!body.success) return badRequest(res, body);
+    res
+      .status(201)
+      .json(await journalService.createTodo(req.session.user.id, body.data));
+  },
+
+  // GET /api/todos/:id
+  async getTodo(req, res) {
+    const note = await journalService.getTodo(
+      req.session.user.id,
+      req.params.id
+    );
+    if (!note) return notFound(res);
+    res.json(note);
+  },
+
+  // PATCH /api/todos/:id — { title?, date?, tasks? }
+  async updateTodo(req, res) {
+    const body = todoPatchSchema.safeParse(req.body ?? {});
+    if (!body.success) return badRequest(res, body);
+    const note = await journalService.updateTodo(
+      req.session.user.id,
+      req.params.id,
+      body.data
+    );
+    if (!note) return notFound(res);
+    res.json(note);
+  },
+
+  // DELETE /api/todos/:id
+  async deleteTodo(req, res) {
+    const deleted = await journalService.deleteTodo(
+      req.session.user.id,
+      req.params.id
+    );
+    if (!deleted) return notFound(res);
+    res.status(204).end();
+  },
+
+  // GET /api/todos/:id/notes — the note's "Remember" markdown.
+  async getTodoNotes(req, res) {
+    const doc = await journalService.getTodoNotes(
+      req.session.user.id,
+      req.params.id
+    );
+    if (!doc) return notFound(res);
+    res.json(doc);
+  },
+
+  // PUT /api/todos/:id/notes
+  async saveTodoNotes(req, res) {
     const body = markdownBodySchema.safeParse(req.body ?? {});
     if (!body.success) return badRequest(res, body);
-    res.json(
-      await journalService.saveTodos(req.session.user.id, body.data.markdown)
+    const doc = await journalService.saveTodoNotes(
+      req.session.user.id,
+      req.params.id,
+      body.data.markdown
     );
+    if (!doc) return notFound(res);
+    res.json(doc);
   },
 
   // POST /api/journal/transcribe[?kind=todo] — multipart "audio"; Groq Whisper

@@ -25,6 +25,7 @@ export const AppRoutes = () => {
         <Route path="/plan" element={<PlanPage />} />
         <Route path="/journal" element={<JournalView />} />
         <Route path="/todos" element={<TodoView />} />
+        <Route path="/todos/:noteId" element={<TodoView />} />
         <Route path="/uploads" element={<UploadsView />} />
       </Route>
 

@@ -19,8 +19,8 @@ Fix transcription errors, filler words and false starts, but keep every fact the
 Return only the markdown, no preamble and no code fences.`;
 
 const TODO_PROMPT = `Below is a raw speech-to-text transcript of a student listing things they need to do, plans and ideas.
-Turn it into a markdown checklist: one "- [ ] " item per task, short and actionable.
-If the items span several areas (e.g. study, projects, ideas), group them under small "###" headings; otherwise no headings.
+Turn it into markdown: first one "- [ ] " item per task, short and actionable, with no headings.
+Then, only if they mentioned things to remember that are not tasks (facts, deadlines, ideas), list those as plain "- " bullets after a blank line.
 Fix transcription errors, filler words and false starts, but keep every task they mentioned. Do not invent anything.
 Return only the markdown, no preamble and no code fences.`;
 

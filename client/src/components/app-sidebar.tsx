@@ -128,7 +128,10 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
               {NAV_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    isActive={pathname === item.path}
+                    isActive={
+                      pathname === item.path ||
+                      pathname.startsWith(`${item.path}/`)
+                    }
                     tooltip={item.label}
                     onClick={() => navigate(item.path)}
                   >

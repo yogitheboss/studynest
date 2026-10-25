@@ -46,6 +46,11 @@ export function registerJournalRoutes(app, requireAuth) {
   app.get("/api/journal/:date", requireAuth, journalController.get);
   app.put("/api/journal/:date", requireAuth, journalController.save);
 
-  app.get("/api/todos", requireAuth, journalController.getTodos);
-  app.put("/api/todos", requireAuth, journalController.saveTodos);
+  app.get("/api/todos", requireAuth, journalController.listTodos);
+  app.post("/api/todos", requireAuth, journalController.createTodo);
+  app.get("/api/todos/:id", requireAuth, journalController.getTodo);
+  app.patch("/api/todos/:id", requireAuth, journalController.updateTodo);
+  app.delete("/api/todos/:id", requireAuth, journalController.deleteTodo);
+  app.get("/api/todos/:id/notes", requireAuth, journalController.getTodoNotes);
+  app.put("/api/todos/:id/notes", requireAuth, journalController.saveTodoNotes);
 }

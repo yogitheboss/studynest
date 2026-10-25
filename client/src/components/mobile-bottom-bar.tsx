@@ -14,7 +14,8 @@ export function MobileBottomBar() {
   return (
     <nav className="bg-background fixed inset-x-0 bottom-0 z-40 flex border-t md:hidden">
       {NAV_ITEMS.map((item) => {
-        const isActive = pathname === item.path;
+        const isActive =
+          pathname === item.path || pathname.startsWith(`${item.path}/`);
         return (
           <button
             key={item.id}

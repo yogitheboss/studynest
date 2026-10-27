@@ -86,7 +86,7 @@ export const PlanProgress = ({
       <p
         className={cn(
           "text-sm font-medium",
-          overdueCount ? "text-destructive" : "text-primary"
+          overdueCount ? "text-destructive" : "text-success"
         )}
       >
         {overdueCount

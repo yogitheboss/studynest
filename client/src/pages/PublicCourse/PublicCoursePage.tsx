@@ -96,7 +96,7 @@ export const PublicCoursePage = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
+          <span className="bg-secondary text-secondary-foreground flex size-9 items-center justify-center rounded-lg">
             <GraduationCap className="size-5" />
           </span>
           <div>
@@ -130,7 +130,7 @@ export const PublicCoursePage = () => {
 
           {/* View toggle */}
           <div
-            className="bg-background/90 absolute top-3 right-3 z-20 flex items-center gap-0.5 rounded-lg border p-1 shadow-sm backdrop-blur"
+            className="bg-card absolute top-3 right-3 z-20 flex items-center gap-0.5 rounded-lg border p-1"
             role="group"
             aria-label="View mode"
           >

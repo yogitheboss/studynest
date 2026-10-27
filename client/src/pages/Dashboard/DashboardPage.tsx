@@ -49,7 +49,7 @@ export const UploadsView = () => (
       </p>
     </div>
     <div className="bg-muted/30 flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center">
-      <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
+      <div className="bg-secondary text-secondary-foreground flex size-12 items-center justify-center rounded-full">
         <Upload className="size-6" />
       </div>
       <div>
@@ -308,7 +308,7 @@ export const DashboardPage = () => {
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium",
                     selectedCourse.isPublic
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-secondary text-secondary-foreground"
                       : "bg-muted text-muted-foreground"
                   )}
                 >
@@ -348,7 +348,7 @@ export const DashboardPage = () => {
               className={cn(
                 "group flex items-center gap-1 rounded-full border px-1 py-1 text-sm transition-colors",
                 course.id === selectedId
-                  ? "border-primary bg-primary/10"
+                  ? "border-primary bg-secondary"
                   : "border-border hover:bg-accent/50"
               )}
             >
@@ -409,7 +409,7 @@ export const DashboardPage = () => {
 
             {/* View toggle — right side of the canvas */}
             <div
-              className="bg-background/90 absolute top-3 right-3 z-20 flex items-center gap-0.5 rounded-lg border p-1 shadow-sm backdrop-blur"
+              className="bg-card absolute top-3 right-3 z-20 flex items-center gap-0.5 rounded-lg border p-1"
               role="group"
               aria-label="View mode"
             >
@@ -451,7 +451,7 @@ export const DashboardPage = () => {
         </div>
       ) : (
         <div className="bg-muted/30 flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center">
-          <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
+          <div className="bg-secondary text-secondary-foreground flex size-12 items-center justify-center rounded-full">
             <GraduationCap className="size-6" />
           </div>
           <div>

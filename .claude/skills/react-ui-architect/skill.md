@@ -175,7 +175,7 @@ Dependencies should always flow downward toward shared modules and never upward 
 
 ## App.css Extraction
 
-Before generating or editing UI components, read the CSS variables defined in `App.css` (or the application's primary theme file).
+Before generating or editing UI components, read `DESIGN.md` (repo root) and the CSS variables defined in `App.css`. DESIGN.md's colour rules (one ink per screen, tint with tokens not opacity, flat surfaces) are mandatory.
 
 ## No Hardcoded Colors
 
@@ -194,16 +194,18 @@ background: "#000";
 
 ## CSS Variables
 
-Exclusively use project-defined CSS custom properties.
+Exclusively use the semantic tokens, through their Tailwind classes. Never use the primitives (`--paper-*`, `--ink-*`, `--marigold-*`, `--fern-*`, `--brick-*`) in components.
 
 Examples:
 
-```css
-var(--bg-primary)
-var(--bg-secondary)
-var(--text-primary)
-var(--text-secondary)
-var(--border-primary)
+```tsx
+bg-background text-foreground        // page
+bg-card border                       // raised surface
+bg-muted text-muted-foreground       // quiet surface / secondary text
+bg-primary text-primary-foreground   // the one main action
+bg-secondary text-secondary-foreground // ink tint: selected, badges
+bg-highlight text-highlight-foreground // highlighter: revision, emphasis
+text-success / text-destructive      // status only
 ```
 
 ## Dark Mode Adaptability
@@ -212,17 +214,7 @@ Ensure backgrounds, text, borders, and surfaces automatically adapt to the appli
 
 ## Sizing Scales
 
-Respect existing design tokens:
-
-```css
---space-xs
---space-sm
---space-md
---space-lg
---font-sm
---font-base
---font-lg
-```
+Use Tailwind's spacing and type scale as documented in `DESIGN.md` §2–3 (e.g. `p-4`, `gap-3`, `text-sm`).
 
 # Strict TypeScript Requirements
 

@@ -45,13 +45,15 @@ const VisibilityOption = ({
     aria-pressed={active}
     className={cn(
       "flex flex-1 items-start gap-3 rounded-lg border p-3 text-left transition-colors disabled:opacity-60",
-      active ? "border-primary bg-primary/5" : "hover:bg-accent/50"
+      active ? "border-primary bg-secondary" : "hover:bg-accent/50"
     )}
   >
     <span
       className={cn(
         "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full",
-        active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+        active
+          ? "bg-secondary text-secondary-foreground"
+          : "bg-muted text-muted-foreground"
       )}
     >
       {icon}

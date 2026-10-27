@@ -26,7 +26,7 @@ export const AuthShell = ({
           <span className="text-lg font-semibold">StudyNest</span>
         </div>
 
-        <section className="border-border bg-card rounded-xl border p-6 shadow-sm">
+        <section className="border-border bg-card rounded-xl border p-6">
           <header className="mb-6 space-y-1.5 text-center">
             <h1 className="text-card-foreground text-xl font-semibold">
               {title}

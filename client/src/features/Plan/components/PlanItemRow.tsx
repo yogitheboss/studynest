@@ -72,7 +72,7 @@ export const PlanItemRow = ({
             </span>
             <span className="text-muted-foreground flex flex-wrap gap-x-2 text-xs">
               {isRevision && (
-                <span className="bg-secondary text-secondary-foreground rounded px-1.5">
+                <span className="bg-highlight text-highlight-foreground rounded px-1.5">
                   Revise
                 </span>
               )}

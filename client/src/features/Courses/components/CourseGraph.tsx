@@ -40,11 +40,11 @@ const NODE_STYLES: NodeStyle[] = [
     icon: GraduationCap,
   },
   {
-    container: "bg-accent text-accent-foreground border-accent",
+    container: "bg-secondary text-secondary-foreground border-secondary",
     icon: Layers,
   },
   {
-    container: "bg-secondary text-secondary-foreground border-secondary",
+    container: "bg-highlight text-highlight-foreground border-highlight",
     icon: BookOpen,
   },
   {
@@ -81,7 +81,7 @@ export const CourseGraph = ({
   return (
     <div className="bg-muted/30 relative h-full w-full overflow-hidden rounded-xl border">
       {/* Controls */}
-      <div className="bg-background/90 absolute right-3 bottom-3 z-10 flex items-center gap-1 rounded-lg border p-1 shadow-sm backdrop-blur">
+      <div className="bg-card absolute right-3 bottom-3 z-10 flex items-center gap-1 rounded-lg border p-1">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -106,7 +106,7 @@ export const CourseGraph = ({
       </div>
 
       {/* Legend */}
-      <div className="bg-background/90 absolute bottom-3 left-3 z-10 flex flex-wrap gap-2 rounded-lg border p-2 text-xs shadow-sm backdrop-blur">
+      <div className="bg-card absolute bottom-3 left-3 z-10 flex flex-wrap gap-2 rounded-lg border p-2 text-xs">
         {NODE_STYLES.map((style, depth) => {
           const Icon = style.icon;
           return (
@@ -172,7 +172,7 @@ export const CourseGraph = ({
                   height: NODE_HEIGHT,
                 }}
                 className={cn(
-                  "focus-visible:ring-ring/50 absolute flex items-center gap-2.5 rounded-lg border px-3 text-left shadow-sm transition-all hover:shadow-md focus-visible:ring-[3px] focus-visible:outline-none",
+                  "focus-visible:ring-ring/50 hover:border-ring absolute flex items-center gap-2.5 rounded-lg border px-3 text-left transition-colors focus-visible:ring-[3px] focus-visible:outline-none",
                   style.container,
                   isSelected &&
                     "ring-ring ring-offset-background ring-2 ring-offset-2"

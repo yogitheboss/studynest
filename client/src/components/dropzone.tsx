@@ -73,13 +73,13 @@ export const Dropzone = ({
         "flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 text-center transition-colors",
         "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
         isDragging
-          ? "border-primary bg-primary/5"
+          ? "border-primary bg-secondary"
           : "border-border hover:border-primary/60 hover:bg-accent/40",
         disabled && "cursor-not-allowed opacity-60",
         className
       )}
     >
-      <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-full">
+      <div className="bg-secondary text-secondary-foreground flex size-10 items-center justify-center rounded-full">
         <UploadCloud className="size-5" />
       </div>
       <div>
